@@ -46,6 +46,11 @@ const navigation = [
     href: "/dashboard/goals",
     icon: Target,
   },
+  {
+    name: "Calendar",
+    href: "/dashboard/calendar",
+    icon: CalendarDays,
+  },
 ]
 
 export default function Sidebar() {
