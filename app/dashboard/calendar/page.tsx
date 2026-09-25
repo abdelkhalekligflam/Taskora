@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { CalendarDays, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Task = {
   id: string
@@ -23,6 +24,7 @@ function monthKey(date: Date) {
 }
 
 export default function CalendarPage() {
+  const { t, language } = usePreferences()
   const [month, setMonth] = useState(() => {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1)
@@ -104,24 +106,24 @@ export default function CalendarPage() {
       <div className="mx-auto max-w-[1600px]">
         <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">Calendar</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">{t.calendar}</p>
             <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.035em] text-neutral-950">
-              {month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              {month.toLocaleDateString(language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US", { month: "long", year: "numeric" })}
             </h1>
-            <p className="mt-1 text-sm text-neutral-500">Your scheduled Taskora tasks in one calendar view.</p>
+            <p className="mt-1 text-sm text-neutral-500">{t.calendarIntro}</p>
           </div>
 
           <div className="flex h-10 items-center rounded-xl border border-neutral-200 bg-white p-1">
             <button onClick={() => moveMonth(-1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100"><ChevronLeft className="h-4 w-4" /></button>
-            <button onClick={goToday} className="h-8 rounded-lg bg-neutral-100 px-4 text-xs font-semibold text-neutral-700">Today</button>
+            <button onClick={goToday} className="h-8 rounded-lg bg-neutral-100 px-4 text-xs font-semibold text-neutral-700">{t.today}</button>
             <button onClick={() => moveMonth(1)} className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </section>
 
         <section className="mt-6 grid gap-4 sm:grid-cols-3">
-          <Stat label="Scheduled" value={String(tasks.length)} />
-          <Stat label="Completed" value={String(completed)} />
-          <Stat label="Pending" value={String(tasks.length - completed)} />
+          <Stat label={t.scheduled} value={String(tasks.length)} />
+          <Stat label={t.completed} value={String(completed)} />
+          <Stat label={t.pending} value={String(tasks.length - completed)} />
         </section>
 
         {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
@@ -166,7 +168,7 @@ export default function CalendarPage() {
 
           <aside className="xl:col-span-3">
             <div className="sticky top-6 rounded-2xl border border-neutral-200 bg-white p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">Selected Day</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">{t.selectedDay}</p>
               <h2 className="mt-1 text-lg font-semibold text-neutral-950">
                 {selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
               </h2>
@@ -176,7 +178,7 @@ export default function CalendarPage() {
                 {selectedTasks.length === 0 ? (
                   <div className="rounded-xl bg-neutral-50 px-4 py-8 text-center">
                     <CalendarDays className="mx-auto h-5 w-5 text-neutral-300" />
-                    <p className="mt-2 text-xs text-neutral-400">No scheduled tasks for this day.</p>
+                    <p className="mt-2 text-xs text-neutral-400">{t.noScheduled}</p>
                   </div>
                 ) : selectedTasks.map((task) => (
                   <div key={task.id} className="rounded-xl bg-neutral-50 p-3">
