@@ -27,6 +27,12 @@ const defaults: Profile = {
 
 const supabase = createClient()
 
+function applyTheme(theme: Profile["theme"]) {
+  const root = document.documentElement
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+  root.classList.toggle("dark", theme === "dark" || (theme === "system" && prefersDark))
+}
+
 export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile>(defaults)
   const [email, setEmail] = useState("")
@@ -48,17 +54,36 @@ export default function SettingsPage() {
       const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle()
 
       if (error) setError(error.message)
-      else if (data) setProfile(data as Profile)
+      else if (data) {
+        const loadedProfile = data as Profile
+        setProfile(loadedProfile)
+        applyTheme(loadedProfile.theme)
+      }
       else {
         const initial = { ...defaults, full_name: String(user.user_metadata?.full_name ?? "") }
         const { error: insertError } = await supabase.from("profiles").insert({ user_id: user.id, ...initial })
         if (insertError) setError(insertError.message)
-        else setProfile(initial)
+        else {
+          setProfile(initial)
+          applyTheme(initial.theme)
+        }
       }
       setLoading(false)
     }
     void load()
   }, [])
+
+  useEffect(() => {
+    applyTheme(profile.theme)
+  }, [profile.theme])
+
+  useEffect(() => {
+    if (profile.theme !== "system") return
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const sync = () => applyTheme("system")
+    media.addEventListener("change", sync)
+    return () => media.removeEventListener("change", sync)
+  }, [profile.theme])
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -87,7 +112,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <form onSubmit={saveSettings} className="min-h-screen bg-[#F9F9FD] px-8 py-8 lg:px-10">
+    <form onSubmit={saveSettings} className="settings-page min-h-screen px-8 py-8 lg:px-10">
       <div className="mx-auto max-w-[1200px]">
         <section className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
@@ -131,7 +156,7 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-            <p className="text-[11px] leading-5 text-neutral-400">Theme preference is saved now. Global dark-mode rendering will be connected in the next i18n + Dark Mode phase.</p>
+            <p className="text-[11px] leading-5 text-neutral-400">Theme changes are applied instantly and saved to your Taskora profile.</p>
           </Card>
 
           <Card icon={<Globe2 />} title="Language & Region" description="Set your preferred language and timezone.">
@@ -162,7 +187,19 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
-      <style jsx global>{`.settings-input{height:40px;width:100%;border-radius:8px;border:1px solid #e5e5e5;background:#fafafa;padding:0 12px;font-size:13px;outline:none}.settings-input:focus{border-color:#4143d5;background:white;box-shadow:0 0 0 2px rgba(65,67,213,.1)}`}</style>
+      <style jsx global>{`
+        .settings-page{background:#f9f9fd;color:#171717}
+        .settings-input{height:40px;width:100%;border-radius:8px;border:1px solid #e5e5e5;background:#fafafa;padding:0 12px;font-size:13px;outline:none;color:#171717}
+        .settings-input:focus{border-color:#4143d5;background:white;box-shadow:0 0 0 2px rgba(65,67,213,.1)}
+        .dark .settings-page{background:#111318;color:#f5f5f5}
+        .dark .settings-page .bg-white{background-color:#1c1f26}
+        .dark .settings-page .bg-neutral-50{background-color:#252830}
+        .dark .settings-page .border-neutral-200,.dark .settings-page .border-neutral-100{border-color:#343842}
+        .dark .settings-page .text-neutral-950,.dark .settings-page .text-neutral-900,.dark .settings-page .text-neutral-800,.dark .settings-page .text-neutral-700{color:#f5f5f5}
+        .dark .settings-page .text-neutral-500,.dark .settings-page .text-neutral-400{color:#a8adb7}
+        .dark .settings-input{border-color:#343842;background:#252830;color:#f5f5f5}
+        .dark .settings-input:focus{border-color:#6d6ff2;background:#1c1f26}
+      `}</style>
     </form>
   )
 }
