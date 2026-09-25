@@ -15,8 +15,8 @@ const copy = {
       ["How do goals work?", "Create a goal, set its current and target values, optionally add a deadline, and update progress as you work."],
     ],
     quick: "Quick links", daily: "Manage tasks", settings: "Preferences", goals: "Manage goals",
-    contactTitle: "Need more help?", contact: "Direct support messaging is not connected yet. This section will become the contact channel when support is configured.",
-    coming: "Support channel coming soon",
+    contactTitle: "Contact us", contact: "Send us an email or leave a message and we will get back to you.",
+    email: "Email", message: "Message", emailPlaceholder: "you@example.com", messagePlaceholder: "How can we help?", send: "Send message",
   },
   fr: {
     eyebrow: "Support", title: "Aide & support", intro: "Trouvez des réponses rapides et découvrez le fonctionnement des principaux outils Taskora.",
@@ -28,8 +28,8 @@ const copy = {
       ["Comment fonctionnent les objectifs ?", "Créez un objectif, définissez les valeurs actuelle et cible, ajoutez éventuellement une échéance et mettez à jour la progression."],
     ],
     quick: "Liens rapides", daily: "Gérer les tâches", settings: "Préférences", goals: "Gérer les objectifs",
-    contactTitle: "Besoin de plus d'aide ?", contact: "La messagerie de support direct n'est pas encore connectée. Cette section deviendra le canal de contact une fois le support configuré.",
-    coming: "Canal de support bientôt disponible",
+    contactTitle: "Contactez-nous", contact: "Envoyez-nous un e-mail ou laissez un message et nous vous répondrons.",
+    email: "E-mail", message: "Message", emailPlaceholder: "vous@exemple.com", messagePlaceholder: "Comment pouvons-nous vous aider ?", send: "Envoyer le message",
   },
   ar: {
     eyebrow: "الدعم", title: "المساعدة والدعم", intro: "اعثر على إجابات سريعة وتعرف على طريقة استخدام أهم أدوات Taskora.",
@@ -41,8 +41,8 @@ const copy = {
       ["كيف تعمل الأهداف؟", "أنشئ هدفا وحدد القيمة الحالية والمستهدفة ويمكنك إضافة موعد نهائي ثم تحديث التقدم."],
     ],
     quick: "روابط سريعة", daily: "إدارة المهام", settings: "التفضيلات", goals: "إدارة الأهداف",
-    contactTitle: "تحتاج مساعدة إضافية؟", contact: "قناة الدعم المباشر غير متصلة بعد. سيصبح هذا القسم قناة التواصل عند إعداد الدعم.",
-    coming: "قناة الدعم قريبا",
+    contactTitle: "تواصل معنا", contact: "أرسل بريدك الإلكتروني ورسالتك وسنرد عليك.",
+    email: "البريد الإلكتروني", message: "الرسالة", emailPlaceholder: "you@example.com", messagePlaceholder: "كيف يمكننا مساعدتك؟", send: "إرسال الرسالة",
   },
 } as const
 
@@ -77,7 +77,11 @@ export default function SupportPage() {
             <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-[#1C1F26]">
               <div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-[#4143D5]"/><h2 className="text-sm font-semibold">{t.contactTitle}</h2></div>
               <p className="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400">{t.contact}</p>
-              <div className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5 text-xs font-medium text-neutral-500 dark:bg-[#252830] dark:text-neutral-400">{t.coming}</div>
+              <form className="mt-4 space-y-3" onSubmit={(event) => event.preventDefault()}>
+                <label className="block text-xs font-semibold">{t.email}<input type="email" required placeholder={t.emailPlaceholder} className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-transparent px-3 py-2.5 text-sm outline-none focus:border-[#4143D5] dark:border-neutral-700" /></label>
+                <label className="block text-xs font-semibold">{t.message}<textarea required rows={4} placeholder={t.messagePlaceholder} className="mt-1.5 w-full resize-none rounded-lg border border-neutral-200 bg-transparent px-3 py-2.5 text-sm outline-none focus:border-[#4143D5] dark:border-neutral-700" /></label>
+                <button type="submit" className="w-full rounded-lg bg-[#4143D5] px-3 py-2.5 text-sm font-semibold text-white transition hover:opacity-90">{t.send}</button>
+              </form>
             </section>
           </div>
         </div>
