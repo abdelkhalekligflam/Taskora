@@ -493,12 +493,12 @@ export default function DailyPage() {
               {plan === "pro" && (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Repeat">
-                <select name="recurrence" defaultValue={editingTask.recurrence ?? "none"} className="input-taskora">
+                <select name="recurrence" defaultValue={task.recurrence ?? "none"} className="input-taskora">
                   <option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
                 </select>
               </Field>
               <Field label="Reminder">
-                <select name="reminder_minutes" defaultValue={editingTask.reminder_minutes ?? ""} className="input-taskora">
+                <select name="reminder_minutes" defaultValue={task.reminder_minutes ?? ""} className="input-taskora">
                   <option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option>
                 </select>
               </Field>
