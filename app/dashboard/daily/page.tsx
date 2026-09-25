@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Task = {
   id: string
@@ -32,6 +33,9 @@ type Task = {
 const supabase = createClient()
 
 export default function DailyPage() {
+  const { language } = usePreferences()
+  const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
+  const dynamic = dailyDynamic[language]
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -83,7 +87,7 @@ export default function DailyPage() {
     } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      setError("Your session could not be verified. Please sign in again.")
+      setError(dynamic.sessionError)
       setSaving(false)
       return
     }
@@ -255,7 +259,7 @@ export default function DailyPage() {
                 Today&apos;s Tasks
               </h1>
               <p className="mt-1 text-sm text-neutral-500">
-                {tasks.length} tasks · {completed} completed · {completion}% progress
+                {tasks.length} {dynamic.tasks} · {completed} {dynamic.completed} · {completion}% {dynamic.progress}
               </p>
             </div>
 
@@ -348,7 +352,7 @@ export default function DailyPage() {
                           <p className={`text-sm font-semibold ${isDone ? "text-neutral-400 line-through" : "text-neutral-900"}`}>
                             {task.title}
                           </p>
-                          <Priority priority={task.priority} />
+                          <Priority priority={task.priority} label={dynamic.priority[task.priority]} />
                           {task.category && (
                             <span className="rounded-md bg-white px-2 py-1 text-[9px] font-semibold text-neutral-500">
                               {task.category}
@@ -381,11 +385,11 @@ export default function DailyPage() {
                           {task.scheduled_at && (
                             <span className="flex items-center gap-1">
                               <Clock3 className="h-3 w-3" />
-                              {new Date(task.scheduled_at).toLocaleString()}
+                              {new Date(task.scheduled_at).toLocaleString(locale)}
                             </span>
                           )}
-                          {task.duration_minutes && <span>{task.duration_minutes} min</span>}
-                          <span className="capitalize">{task.status.replace("_", " ")}</span>
+                          {task.duration_minutes && <span>{task.duration_minutes} {dynamic.min}</span>}
+                          <span>{dynamic.status[task.status]}</span>
                         </div>
                       </div>
                     </div>
@@ -523,7 +527,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Priority({ priority }: { priority: Task["priority"] }) {
+function Priority({ priority, label }: { priority: Task["priority"]; label: string }) {
   const classes = {
     low: "bg-blue-50 text-blue-700",
     medium: "bg-amber-50 text-amber-700",
@@ -613,3 +617,9 @@ function TaskFormModal({
     </div>
   )
 }
+
+const dailyDynamic = {
+  en: { tasks: "tasks", completed: "completed", progress: "progress", min: "min", sessionError: "Your session could not be verified. Please sign in again.", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" }, priority: { low: "Low", medium: "Medium", high: "High" } },
+  fr: { tasks: "tâches", completed: "terminées", progress: "progression", min: "min", sessionError: "Votre session n’a pas pu être vérifiée. Veuillez vous reconnecter.", status: { todo: "À faire", in_progress: "En cours", completed: "Terminée" }, priority: { low: "Basse", medium: "Moyenne", high: "Haute" } },
+  ar: { tasks: "مهام", completed: "مكتملة", progress: "تقدم", min: "دقيقة", sessionError: "تعذر التحقق من جلستك. يرجى تسجيل الدخول من جديد.", status: { todo: "للإنجاز", in_progress: "قيد التنفيذ", completed: "مكتملة" }, priority: { low: "منخفضة", medium: "متوسطة", high: "عالية" } },
+} as const
