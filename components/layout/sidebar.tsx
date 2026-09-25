@@ -80,7 +80,7 @@ export default function Sidebar() {
           <Settings className="h-[18px] w-[18px]" />
           {t.settings}
         </Link>
-        <Link href="mailto:support@taskora.app" className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
+        <Link href="/dashboard/support" className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
           <CircleHelp className="h-[18px] w-[18px]" />
           {t.help}
         </Link>
