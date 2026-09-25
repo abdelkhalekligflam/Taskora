@@ -28,6 +28,8 @@ type Task = {
   duration_minutes: number | null
   completed_at: string | null
   created_at: string
+  recurrence?: "none" | "daily" | "weekly" | "monthly"
+  reminder_minutes?: number | null
 }
 
 const supabase = createClient()
@@ -43,6 +45,7 @@ export default function DailyPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [plan, setPlan] = useState<"free" | "pro">("free")
 
   async function loadTasks() {
     setLoading(true)
@@ -50,7 +53,7 @@ export default function DailyPage() {
 
     const { data, error: queryError } = await supabase
       .from("tasks")
-      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at")
+      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at,recurrence,reminder_minutes")
       .order("scheduled_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
 
@@ -65,6 +68,7 @@ export default function DailyPage() {
 
   useEffect(() => {
     void loadTasks()
+    void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
   }, [])
 
   async function createTask(event: FormEvent<HTMLFormElement>) {
@@ -80,6 +84,14 @@ export default function DailyPage() {
     const priority = String(form.get("priority") ?? "medium")
     const scheduledAt = String(form.get("scheduled_at") ?? "")
     const duration = String(form.get("duration_minutes") ?? "")
+    const recurrence = String(form.get("recurrence") ?? "none")
+    const reminder = String(form.get("reminder_minutes") ?? "")
+
+    if (plan === "free" && tasks.filter((task) => task.status !== "completed").length >= 100) {
+      setError("Free plan supports up to 100 active tasks. Upgrade to Pro for unlimited tasks.")
+      setSaving(false)
+      return
+    }
 
     const {
       data: { user },
@@ -101,6 +113,8 @@ export default function DailyPage() {
       status: "todo",
       scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
       duration_minutes: duration ? Number(duration) : null,
+      recurrence: plan === "pro" ? recurrence : "none",
+      reminder_minutes: plan === "pro" && reminder ? Number(reminder) : null,
     })
 
     if (insertError) {
@@ -444,6 +458,8 @@ export default function DailyPage() {
                   <input name="duration_minutes" type="number" min="1" placeholder="45" className="input-taskora" />
                 </Field>
               </div>
+
+              {plan === "pro" && <div className="grid gap-4 sm:grid-cols-2"><Field label="Repeat"><select name="recurrence" defaultValue="none" className="input-taskora"><option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></Field><Field label="Reminder"><select name="reminder_minutes" defaultValue="" className="input-taskora"><option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></Field></div>}
 
               <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
                 <button type="button" onClick={() => setShowForm(false)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
