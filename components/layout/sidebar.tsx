@@ -11,6 +11,7 @@ import {
   CircleHelp,
   LayoutDashboard,
   Settings,
+  Target,
   Sparkles,
 } from "lucide-react"
 
@@ -39,6 +40,11 @@ const navigation = [
     name: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
+  },
+  {
+    name: "Goals",
+    href: "/dashboard/goals",
+    icon: Target,
   },
 ]
 
