@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react"
 import { Check, Loader2, Pencil, Plus, Target, Trash2, X } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Goal = {
   id: string
@@ -20,6 +21,8 @@ type Goal = {
 const supabase = createClient()
 
 export default function GoalsPage() {
+  const { language } = usePreferences()
+  const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -174,7 +177,7 @@ export default function GoalsPage() {
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-200"><div className="h-full rounded-full bg-[#4143D5]" style={{ width: `${progress}%` }} /></div>
                     <div className="mt-4 flex items-center justify-between">
-                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `Target: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString()}` : "No deadline"}</div>
+                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `Target: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString(locale)}` : "No deadline"}</div>
                       <button onClick={() => void completeGoal(goal)} className={`rounded-lg px-3 py-1.5 text-[10px] font-semibold ${goal.status === "completed" ? "bg-emerald-50 text-emerald-700" : "bg-white text-[#4143D5]"}`}>
                         {goal.status === "completed" ? "Completed" : "Mark complete"}
                       </button>
