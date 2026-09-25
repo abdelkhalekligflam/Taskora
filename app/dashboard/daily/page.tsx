@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Task = {
   id: string
@@ -27,11 +28,16 @@ type Task = {
   duration_minutes: number | null
   completed_at: string | null
   created_at: string
+  recurrence?: "none" | "daily" | "weekly" | "monthly"
+  reminder_minutes?: number | null
 }
 
 const supabase = createClient()
 
 export default function DailyPage() {
+  const { language } = usePreferences()
+  const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
+  const dynamic = dailyDynamic[language]
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -39,6 +45,7 @@ export default function DailyPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [plan, setPlan] = useState<"free" | "pro">("free")
 
   async function loadTasks() {
     setLoading(true)
@@ -46,7 +53,7 @@ export default function DailyPage() {
 
     const { data, error: queryError } = await supabase
       .from("tasks")
-      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at")
+      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at,recurrence,reminder_minutes")
       .order("scheduled_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
 
@@ -61,6 +68,7 @@ export default function DailyPage() {
 
   useEffect(() => {
     void loadTasks()
+    void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
   }, [])
 
   async function createTask(event: FormEvent<HTMLFormElement>) {
@@ -76,6 +84,14 @@ export default function DailyPage() {
     const priority = String(form.get("priority") ?? "medium")
     const scheduledAt = String(form.get("scheduled_at") ?? "")
     const duration = String(form.get("duration_minutes") ?? "")
+    const recurrence = String(form.get("recurrence") ?? "none")
+    const reminder = String(form.get("reminder_minutes") ?? "")
+
+    if (plan === "free" && tasks.filter((task) => task.status !== "completed").length >= 100) {
+      setError("Free plan supports up to 100 active tasks. Upgrade to Pro for unlimited tasks.")
+      setSaving(false)
+      return
+    }
 
     const {
       data: { user },
@@ -83,7 +99,7 @@ export default function DailyPage() {
     } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      setError("Your session could not be verified. Please sign in again.")
+      setError(dynamic.sessionError)
       setSaving(false)
       return
     }
@@ -97,6 +113,8 @@ export default function DailyPage() {
       status: "todo",
       scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
       duration_minutes: duration ? Number(duration) : null,
+      recurrence: plan === "pro" ? recurrence : "none",
+      reminder_minutes: plan === "pro" && reminder ? Number(reminder) : null,
     })
 
     if (insertError) {
@@ -255,7 +273,7 @@ export default function DailyPage() {
                 Today&apos;s Tasks
               </h1>
               <p className="mt-1 text-sm text-neutral-500">
-                {tasks.length} tasks · {completed} completed · {completion}% progress
+                {tasks.length} {dynamic.tasks} · {completed} {dynamic.completed} · {completion}% {dynamic.progress}
               </p>
             </div>
 
@@ -348,7 +366,7 @@ export default function DailyPage() {
                           <p className={`text-sm font-semibold ${isDone ? "text-neutral-400 line-through" : "text-neutral-900"}`}>
                             {task.title}
                           </p>
-                          <Priority priority={task.priority} />
+                          <Priority priority={task.priority} label={dynamic.priority[task.priority]} />
                           {task.category && (
                             <span className="rounded-md bg-white px-2 py-1 text-[9px] font-semibold text-neutral-500">
                               {task.category}
@@ -381,11 +399,11 @@ export default function DailyPage() {
                           {task.scheduled_at && (
                             <span className="flex items-center gap-1">
                               <Clock3 className="h-3 w-3" />
-                              {new Date(task.scheduled_at).toLocaleString()}
+                              {new Date(task.scheduled_at).toLocaleString(locale)}
                             </span>
                           )}
-                          {task.duration_minutes && <span>{task.duration_minutes} min</span>}
-                          <span className="capitalize">{task.status.replace("_", " ")}</span>
+                          {task.duration_minutes && <span>{task.duration_minutes} {dynamic.min}</span>}
+                          <span>{dynamic.status[task.status]}</span>
                         </div>
                       </div>
                     </div>
@@ -440,6 +458,8 @@ export default function DailyPage() {
                   <input name="duration_minutes" type="number" min="1" placeholder="45" className="input-taskora" />
                 </Field>
               </div>
+
+              {plan === "pro" && <div className="grid gap-4 sm:grid-cols-2"><Field label="Repeat"><select name="recurrence" defaultValue="none" className="input-taskora"><option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></Field><Field label="Reminder"><select name="reminder_minutes" defaultValue="" className="input-taskora"><option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></Field></div>}
 
               <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
                 <button type="button" onClick={() => setShowForm(false)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
@@ -523,7 +543,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Priority({ priority }: { priority: Task["priority"] }) {
+function Priority({ priority, label }: { priority: Task["priority"]; label: string }) {
   const classes = {
     low: "bg-blue-50 text-blue-700",
     medium: "bg-amber-50 text-amber-700",
@@ -613,3 +633,9 @@ function TaskFormModal({
     </div>
   )
 }
+
+const dailyDynamic = {
+  en: { tasks: "tasks", completed: "completed", progress: "progress", min: "min", sessionError: "Your session could not be verified. Please sign in again.", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" }, priority: { low: "Low", medium: "Medium", high: "High" } },
+  fr: { tasks: "tâches", completed: "terminées", progress: "progression", min: "min", sessionError: "Votre session n’a pas pu être vérifiée. Veuillez vous reconnecter.", status: { todo: "À faire", in_progress: "En cours", completed: "Terminée" }, priority: { low: "Basse", medium: "Moyenne", high: "Haute" } },
+  ar: { tasks: "مهام", completed: "مكتملة", progress: "تقدم", min: "دقيقة", sessionError: "تعذر التحقق من جلستك. يرجى تسجيل الدخول من جديد.", status: { todo: "للإنجاز", in_progress: "قيد التنفيذ", completed: "مكتملة" }, priority: { low: "منخفضة", medium: "متوسطة", high: "عالية" } },
+} as const

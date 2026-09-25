@@ -1,14 +1,7 @@
 "use client"
 
 import { FormEvent, useState } from "react"
-import {
-  Activity,
-  Eye,
-  EyeOff,
-  Headphones,
-  Loader2,
-  LockKeyhole,
-} from "lucide-react"
+import { CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function AuthPage() {
@@ -95,74 +88,29 @@ export default function AuthPage() {
             </span>
           </div>
 
-          {/* FOCUS ENGINE */}
+          {/* PRODUCT VALUE — no fabricated session data */}
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-[520px]">
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">
-                    Deep Focus Engine
-                  </p>
-
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-                    Stay in the flow.
-                  </h3>
-                </div>
-
-                <Activity className="h-5 w-5 text-white/40" />
+              <div className="mb-6">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">Focused productivity</p>
+                <h3 className="mt-2 text-3xl font-semibold tracking-tight">Plan clearly. Execute with focus.</h3>
+                <p className="mt-3 max-w-md text-sm leading-6 text-white/45">Your tasks, schedule, goals and analytics stay connected in one private workspace.</p>
               </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-7 shadow-2xl shadow-black/20">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-white/35">
-                      Current session
-                    </p>
-
-                    <p className="mt-3 text-6xl font-semibold tracking-[-0.05em]">
-                      18:39
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-xs text-white/35">
-                      Velocity
-                    </p>
-
-                    <p className="mt-1 text-2xl font-semibold">
-                      87%
-                    </p>
-                  </div>
-                </div>
-
-                {/* PROGRESS */}
-                <div className="mt-8 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div className="h-full w-[72%] rounded-full bg-[#7C7CFF]" />
-                </div>
-
-                {/* AUDIO */}
-                <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
-                      <Headphones className="h-4 w-4 text-white/60" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Tasks & planning", "Organize daily work and scheduled priorities."],
+                  ["Goals", "Track measurable progress without duplicate data."],
+                  ["Calendar", "See scheduled tasks across your month."],
+                  ["Analytics", "Review metrics calculated from your own activity."],
+                ].map(([title, text]) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#4143D5]/20 text-[#9B9DFF]">
+                      {title === "Analytics" ? <Sparkles className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                     </div>
-
-                    <div>
-                      <p className="text-sm font-medium">
-                        Binaural 40Hz Flow
-                      </p>
-
-                      <p className="mt-0.5 text-xs text-white/35">
-                        Focus audio active
-                      </p>
-                    </div>
+                    <p className="mt-4 text-sm font-semibold">{title}</p>
+                    <p className="mt-2 text-xs leading-5 text-white/40">{text}</p>
                   </div>
-
-                  <span className="flex items-center gap-2 text-xs text-white/40">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Active
-                  </span>
-                </div>
+                ))}
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from "react"
+import Link from "next/link"
 import { Bell, Check, Globe2, Loader2, Palette, Save, Sparkles, UserRound } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
@@ -145,7 +146,7 @@ export default function SettingsPage() {
             <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-5 w-5" /></div><span className="rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">{profile.plan === "pro" ? "Active" : "Free Plan"}</span></div>
             <h2 className="mt-8 text-2xl font-semibold">{profile.plan === "pro" ? "Pro Plan" : "Taskora Free"}</h2>
             <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">{profile.plan === "pro" ? "Advanced analytics, unlimited spaces and priority support are active." : "Core productivity features are active. Pro subscription will be available in a later billing phase."}</p>
-            <button type="button" disabled className="mt-6 h-9 rounded-lg bg-white px-4 text-xs font-semibold text-[#4143D5] opacity-80">{profile.plan === "pro" ? "Manage subscription" : "Upgrade to Pro"}</button>
+            {profile.plan === "pro" ? <button type="button" disabled className="mt-6 h-9 rounded-lg bg-white px-4 text-xs font-semibold text-[#4143D5] opacity-80">Manage subscription</button> : <Link href="/dashboard/upgrade" className="mt-6 inline-flex h-9 items-center rounded-lg bg-white px-4 text-xs font-semibold text-[#4143D5]">Upgrade to Pro</Link>}
           </div>
 
           <Card icon={<Palette />} title="Appearance" description="Choose how Taskora should look.">
@@ -174,7 +175,7 @@ export default function SettingsPage() {
                 <option value="America/New_York">America — New York</option>
               </select>
             </Field>
-            <p className="text-[11px] leading-5 text-neutral-400">Language preference is persisted; interface translation will be activated in the next phase.</p>
+            <p className="text-[11px] leading-5 text-neutral-400">Language changes are saved to your profile and applied across the Taskora workspace.</p>
           </Card>
 
           <Card icon={<Bell />} title="Notifications" description="Control reminders and product updates.">
