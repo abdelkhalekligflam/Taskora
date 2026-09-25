@@ -102,6 +102,7 @@ export default function SettingsPage() {
     if (error) setError(error.message)
     else {
       setSaved(true)
+      window.dispatchEvent(new Event("taskora-preferences-updated"))
       window.setTimeout(() => setSaved(false), 2500)
     }
     setSaving(false)
