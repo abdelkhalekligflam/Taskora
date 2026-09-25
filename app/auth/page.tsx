@@ -60,6 +60,25 @@ export default function AuthPage() {
     setLoading(false)
   }
 
+  const handleForgotPassword = async () => {
+    setError(null)
+    setSuccess(null)
+
+    if (!email.trim()) {
+      setError("Enter your email address first.")
+      return
+    }
+
+    setLoading(true)
+    const supabase = createClient()
+    const redirectTo = `${window.location.origin}/auth/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+
+    if (error) setError(error.message)
+    else setSuccess("Password reset link sent. Check your email.")
+    setLoading(false)
+  }
+
   const changeMode = (newMode: "signin" | "signup") => {
     setMode(newMode)
     setError(null)
@@ -213,7 +232,9 @@ export default function AuthPage() {
                 {mode === "signin" && (
                   <button
                     type="button"
-                    className="text-xs font-medium text-[#4143D5] hover:underline"
+                    onClick={() => void handleForgotPassword()}
+                    disabled={loading}
+                    className="text-xs font-medium text-[#4143D5] hover:underline disabled:opacity-50"
                   >
                     Forgot password?
                   </button>
@@ -263,18 +284,6 @@ export default function AuthPage() {
                 </button>
               </div>
             </div>
-
-            {/* REMEMBER */}
-            {mode === "signin" && (
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-500">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-neutral-300 accent-[#4143D5]"
-                />
-
-                Remember this device for 30 days
-              </label>
-            )}
 
             {/* ERROR */}
             {error && (
