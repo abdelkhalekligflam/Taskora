@@ -180,7 +180,7 @@ export default function SettingsPage() {
 
           <Card icon={<Bell />} title="Notifications" description="Control reminders and product updates.">
             <Toggle label="In-app notifications" detail="Task reminders and important workspace alerts." checked={profile.notifications_enabled} onChange={(value) => setProfile({ ...profile, notifications_enabled: value })} />
-            <Toggle label="Email notifications" detail="Receive important Taskora updates by email." checked={profile.email_notifications} onChange={(value) => setProfile({ ...profile, email_notifications: value })} />
+            <Toggle label="Email notifications" detail="Email delivery is not enabled yet." checked={false} onChange={() => undefined} />
           </Card>
 
           <Card icon={<Sparkles />} title="Subscription" description="Your current Taskora access level.">
