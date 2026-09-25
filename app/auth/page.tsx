@@ -255,7 +255,7 @@ export default function AuthPage() {
                       : "Create a password"
                   }
                   required
-                  minLength={6}
+                  minLength={8}
                   autoComplete={
                     mode === "signin"
                       ? "current-password"
@@ -283,6 +283,7 @@ export default function AuthPage() {
                   )}
                 </button>
               </div>
+              {mode === "signup" && <p className="mt-2 text-[11px] text-neutral-400">Use at least 8 characters.</p>}
             </div>
 
             {/* ERROR */}
