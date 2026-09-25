@@ -23,6 +23,7 @@ const supabase = createClient()
 export default function GoalsPage() {
   const { language } = usePreferences()
   const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
+  const g = goalLabels[language]
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -122,35 +123,35 @@ export default function GoalsPage() {
       <div className="mx-auto max-w-[1440px]">
         <section className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">Goals</p>
-            <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.035em] text-neutral-950">Long-term Objectives</h1>
-            <p className="mt-1 text-sm text-neutral-500">Set measurable targets and track progress over time.</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">{g.goals}</p>
+            <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.035em] text-neutral-950">{g.heading}</h1>
+            <p className="mt-1 text-sm text-neutral-500">{g.intro}</p>
           </div>
           <button onClick={() => setShowCreate(true)} className="flex h-10 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-sm font-semibold text-white">
-            <Plus className="h-4 w-4" /> New goal
+            <Plus className="h-4 w-4" /> {g.newGoal}
           </button>
         </section>
 
         <section className="mt-6 grid gap-4 sm:grid-cols-3">
-          <Stat label="Total Goals" value={String(goals.length)} />
-          <Stat label="Active" value={String(active)} />
-          <Stat label="Completed" value={String(completed)} />
+          <Stat label={g.total} value={String(goals.length)} />
+          <Stat label={g.active} value={String(active)} />
+          <Stat label={g.completed} value={String(completed)} />
         </section>
 
         {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
           <div className="border-b border-neutral-100 pb-4">
-            <h2 className="text-lg font-semibold text-neutral-950">Your goals</h2>
+            <h2 className="text-lg font-semibold text-neutral-950">{g.yourGoals}</h2>
             <p className="mt-1 text-xs text-neutral-400">Progress is stored securely in your Taskora account.</p>
           </div>
 
           {loading ? (
-            <div className="flex min-h-[300px] items-center justify-center text-sm text-neutral-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Loading goals...</div>
+            <div className="flex min-h-[300px] items-center justify-center text-sm text-neutral-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" />{g.loading}</div>
           ) : goals.length === 0 ? (
             <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEEFF] text-[#4143D5]"><Target className="h-5 w-5" /></div>
-              <h3 className="mt-4 text-sm font-semibold text-neutral-900">No goals yet</h3>
+              <h3 className="mt-4 text-sm font-semibold text-neutral-900">{g.empty}</h3>
               <p className="mt-1 text-xs text-neutral-400">Create a measurable long-term objective.</p>
               <button onClick={() => setShowCreate(true)} className="mt-4 rounded-lg bg-[#4143D5] px-4 py-2 text-xs font-semibold text-white">Create first goal</button>
             </div>
@@ -172,14 +173,14 @@ export default function GoalsPage() {
                     <h3 className="mt-4 text-base font-semibold text-neutral-900">{goal.title}</h3>
                     {goal.description && <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-500">{goal.description}</p>}
                     <div className="mt-5 flex items-end justify-between">
-                      <div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Progress</p><p className="mt-1 text-xl font-bold text-neutral-950">{progress}%</p></div>
+                      <div><p className="text-[10px] uppercase tracking-wider text-neutral-400">{g.progress}</p><p className="mt-1 text-xl font-bold text-neutral-950">{progress}%</p></div>
                       <p className="text-xs font-medium text-neutral-500">{goal.current_value}{goal.unit ? ` ${goal.unit}` : ""} / {goal.target_value ?? "—"}{goal.unit ? ` ${goal.unit}` : ""}</p>
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-200"><div className="h-full rounded-full bg-[#4143D5]" style={{ width: `${progress}%` }} /></div>
                     <div className="mt-4 flex items-center justify-between">
-                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `Target: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString(locale)}` : "No deadline"}</div>
+                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `Target: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString(locale)}` : g.noDeadline}</div>
                       <button onClick={() => void completeGoal(goal)} className={`rounded-lg px-3 py-1.5 text-[10px] font-semibold ${goal.status === "completed" ? "bg-emerald-50 text-emerald-700" : "bg-white text-[#4143D5]"}`}>
-                        {goal.status === "completed" ? "Completed" : "Mark complete"}
+                        {goal.status === "completed" ? g.completed : g.markComplete}
                       </button>
                     </div>
                   </article>
@@ -241,3 +242,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Stat({ label, value }: { label: string; value: string }) {
   return <div className="rounded-2xl border border-neutral-200 bg-white p-5"><p className="text-xs text-neutral-400">{label}</p><p className="mt-2 text-2xl font-bold text-neutral-950">{value}</p></div>
 }
+
+const goalLabels = {
+ en: { goals:"Goals", heading:"Long-term Objectives", intro:"Set measurable targets and track progress over time.", newGoal:"New goal", total:"Total Goals", active:"Active", completed:"Completed", yourGoals:"Your goals", loading:"Loading goals...", empty:"No goals yet", progress:"Progress", noDeadline:"No deadline", markComplete:"Mark complete" },
+ fr: { goals:"Objectifs", heading:"Objectifs a long terme", intro:"Definissez des objectifs mesurables et suivez leur progression.", newGoal:"Nouvel objectif", total:"Total des objectifs", active:"Actifs", completed:"Termines", yourGoals:"Vos objectifs", loading:"Chargement des objectifs...", empty:"Aucun objectif", progress:"Progression", noDeadline:"Aucune echeance", markComplete:"Marquer termine" },
+ ar: { goals:"الاهداف", heading:"الاهداف طويلة المدى", intro:"حدد اهدافا قابلة للقياس وتابع تقدمها مع الوقت.", newGoal:"هدف جديد", total:"اجمالي الاهداف", active:"نشطة", completed:"مكتملة", yourGoals:"اهدافك", loading:"جاري تحميل الاهداف...", empty:"لا توجد اهداف", progress:"التقدم", noDeadline:"بدون موعد نهائي", markComplete:"وضع علامة مكتمل" }
+} as const
