@@ -87,7 +87,7 @@ export default function Sidebar() {
         <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">AK</div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.account}</p>
+            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.myAccount}</p>
             <p className="truncate text-[10px] text-neutral-400">{t.member}</p>
           </div>
         </div>
