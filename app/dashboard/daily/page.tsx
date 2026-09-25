@@ -140,6 +140,8 @@ export default function DailyPage() {
     const priority = String(form.get("priority") ?? "medium")
     const scheduledAt = String(form.get("scheduled_at") ?? "")
     const duration = String(form.get("duration_minutes") ?? "")
+    const recurrence = String(form.get("recurrence") ?? editingTask.recurrence ?? "none")
+    const reminder = String(form.get("reminder_minutes") ?? editingTask.reminder_minutes ?? "")
 
     setSaving(true)
     setError(null)
@@ -153,6 +155,8 @@ export default function DailyPage() {
         priority,
         scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
         duration_minutes: duration ? Number(duration) : null,
+        recurrence: plan === "pro" ? recurrence : "none",
+        reminder_minutes: plan === "pro" && reminder ? Number(reminder) : null,
       })
       .eq("id", editingTask.id)
 
@@ -202,6 +206,31 @@ export default function DailyPage() {
 
     if (updateError) {
       setError(updateError.message)
+      return
+    }
+
+    if (completed && plan === "pro" && task.recurrence && task.recurrence !== "none" && task.scheduled_at) {
+      const nextDate = getNextOccurrence(new Date(task.scheduled_at), task.recurrence)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { error: recurrenceError } = await supabase.from("tasks").insert({
+          user_id: user.id,
+          title: task.title,
+          description: task.description,
+          category: task.category,
+          priority: task.priority,
+          status: "todo",
+          scheduled_at: nextDate.toISOString(),
+          duration_minutes: task.duration_minutes,
+          recurrence: task.recurrence,
+          reminder_minutes: task.reminder_minutes ?? null,
+        })
+        if (recurrenceError) {
+          setError(recurrenceError.message)
+          return
+        }
+      }
+      await loadTasks()
       return
     }
 
@@ -461,7 +490,21 @@ export default function DailyPage() {
 
               {plan === "pro" && <div className="grid gap-4 sm:grid-cols-2"><Field label="Repeat"><select name="recurrence" defaultValue="none" className="input-taskora"><option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></Field><Field label="Reminder"><select name="reminder_minutes" defaultValue="" className="input-taskora"><option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></Field></div>}
 
-              <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+              {plan === "pro" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Repeat">
+                <select name="recurrence" defaultValue={editingTask.recurrence ?? "none"} className="input-taskora">
+                  <option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
+                </select>
+              </Field>
+              <Field label="Reminder">
+                <select name="reminder_minutes" defaultValue={editingTask.reminder_minutes ?? ""} className="input-taskora">
+                  <option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option>
+                </select>
+              </Field>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
                 <button type="button" onClick={() => setShowForm(false)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
                   Cancel
                 </button>
@@ -481,6 +524,7 @@ export default function DailyPage() {
           submitLabel="Save changes"
           task={editingTask}
           saving={saving}
+          plan={plan}
           onClose={() => setEditingTask(null)}
           onSubmit={updateTask}
         />
@@ -563,6 +607,7 @@ function TaskFormModal({
   submitLabel,
   task,
   saving,
+  plan,
   onClose,
   onSubmit,
 }: {
@@ -570,6 +615,7 @@ function TaskFormModal({
   submitLabel: string
   task: Task
   saving: boolean
+  plan: "free" | "pro"
   onClose: () => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
@@ -632,6 +678,14 @@ function TaskFormModal({
       </div>
     </div>
   )
+}
+
+function getNextOccurrence(date: Date, recurrence: "daily" | "weekly" | "monthly") {
+  const next = new Date(date)
+  if (recurrence === "daily") next.setDate(next.getDate() + 1)
+  if (recurrence === "weekly") next.setDate(next.getDate() + 7)
+  if (recurrence === "monthly") next.setMonth(next.getMonth() + 1)
+  return next
 }
 
 const dailyDynamic = {
