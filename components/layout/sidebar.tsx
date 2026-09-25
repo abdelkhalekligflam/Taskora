@@ -80,10 +80,10 @@ export default function Sidebar() {
           <Settings className="h-[18px] w-[18px]" />
           {t.settings}
         </Link>
-        <button type="button" className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
+        <Link href="mailto:support@taskora.app" className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
           <CircleHelp className="h-[18px] w-[18px]" />
           {t.help}
-        </button>
+        </Link>
         <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">AK</div>
           <div className="min-w-0 flex-1">
