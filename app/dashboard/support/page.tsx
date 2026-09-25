@@ -19,7 +19,7 @@ const copy = {
       ["How do goals work?", "Create a goal, set its current and target values, optionally add a deadline, and update progress as you work."],
     ],
     quick: "Quick links", daily: "Manage tasks", settings: "Preferences", goals: "Manage goals",
-    contactTitle: "Contact us", contact: "Send us an email or leave a message and we will get back to you.",
+    contactTitle: "Contact us", contact: "Submit a support request here and we will keep it linked to your Taskora account.",
     email: "Email", message: "Message", emailPlaceholder: "you@example.com", messagePlaceholder: "How can we help?", send: "Send message", sending: "Sending...", sent: "Your support request was submitted.", failed: "Could not submit your request. Please try again.",
   },
   fr: {
@@ -32,7 +32,7 @@ const copy = {
       ["Comment fonctionnent les objectifs ?", "Créez un objectif, définissez les valeurs actuelle et cible, ajoutez éventuellement une échéance et mettez à jour la progression."],
     ],
     quick: "Liens rapides", daily: "Gérer les tâches", settings: "Préférences", goals: "Gérer les objectifs",
-    contactTitle: "Contactez-nous", contact: "Envoyez-nous un e-mail ou laissez un message et nous vous répondrons.",
+    contactTitle: "Contactez-nous", contact: "Envoyez une demande de support ici. Elle restera liée à votre compte Taskora.",
     email: "E-mail", message: "Message", emailPlaceholder: "vous@exemple.com", messagePlaceholder: "Comment pouvons-nous vous aider ?", send: "Envoyer le message", sending: "Envoi...", sent: "Votre demande de support a été envoyée.", failed: "Impossible d’envoyer votre demande. Réessayez.",
   },
   ar: {
