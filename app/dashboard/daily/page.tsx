@@ -61,10 +61,11 @@ export default function DailyPage() {
 
   async function createTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const formElement = event.currentTarget
     setSaving(true)
     setError(null)
 
-    const form = new FormData(event.currentTarget)
+    const form = new FormData(formElement)
     const title = String(form.get("title") ?? "").trim()
     const description = String(form.get("description") ?? "").trim()
     const category = String(form.get("category") ?? "").trim()
@@ -100,7 +101,7 @@ export default function DailyPage() {
       return
     }
 
-    event.currentTarget.reset()
+    formElement.reset()
     setShowForm(false)
     setSaving(false)
     await loadTasks()
