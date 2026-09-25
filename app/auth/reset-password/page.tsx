@@ -17,8 +17,8 @@ export default function ResetPasswordPage() {
     event.preventDefault()
     setError(null)
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.")
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.")
       return
     }
     if (password !== confirmPassword) {
@@ -72,7 +72,7 @@ function PasswordField({ label, value, onChange, show, onToggle }: { label: stri
     <div>
       <label className="mb-2 block text-sm font-medium text-neutral-700">{label}</label>
       <div className="relative">
-        <input type={show ? "text" : "password"} value={value} onChange={(event) => onChange(event.target.value)} required minLength={6} autoComplete="new-password" className="h-11 w-full rounded-lg border border-neutral-200 px-3.5 pr-11 text-sm text-neutral-950 outline-none focus:border-[#4143D5] focus:ring-2 focus:ring-[#4143D5]/10" />
+        <input type={show ? "text" : "password"} value={value} onChange={(event) => onChange(event.target.value)} required minLength={8} autoComplete="new-password" className="h-11 w-full rounded-lg border border-neutral-200 px-3.5 pr-11 text-sm text-neutral-950 outline-none focus:border-[#4143D5] focus:ring-2 focus:ring-[#4143D5]/10" />
         <button type="button" onClick={onToggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-label={show ? "Hide password" : "Show password"}>
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
