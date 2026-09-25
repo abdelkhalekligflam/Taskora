@@ -174,7 +174,7 @@ export default function SettingsPage() {
                 <option value="America/New_York">America — New York</option>
               </select>
             </Field>
-            <p className="text-[11px] leading-5 text-neutral-400">Language preference is persisted; interface translation will be activated in the next phase.</p>
+            <p className="text-[11px] leading-5 text-neutral-400">Language changes are saved to your profile and applied across the Taskora workspace.</p>
           </Card>
 
           <Card icon={<Bell />} title="Notifications" description="Control reminders and product updates.">
