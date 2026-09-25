@@ -31,6 +31,7 @@ export default function GoalsPage() {
   const [deleting, setDeleting] = useState<Goal | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [plan, setPlan] = useState<"free" | "pro">("free")
 
   async function loadGoals() {
     setLoading(true)
@@ -47,6 +48,7 @@ export default function GoalsPage() {
 
   useEffect(() => {
     void loadGoals()
+    void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
   }, [])
 
   async function saveGoal(event: FormEvent<HTMLFormElement>, goal?: Goal) {
@@ -73,6 +75,11 @@ export default function GoalsPage() {
         return
       }
     } else {
+      if (plan === "free" && goals.filter((item) => item.status !== "archived").length >= 3) {
+        setError("Free plan supports up to 3 goals. Upgrade to Pro for unlimited goals.")
+        setSaving(false)
+        return
+      }
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         setError("Your session could not be verified.")
