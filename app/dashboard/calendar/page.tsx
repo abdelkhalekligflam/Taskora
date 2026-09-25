@@ -17,14 +17,14 @@ type Task = {
 }
 
 const supabase = createClient()
-const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-
 function monthKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
 }
 
 export default function CalendarPage() {
   const { t, language } = usePreferences()
+  const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
+  const local = calendarCopy[language]
   const [month, setMonth] = useState(() => {
     const now = new Date()
     return new Date(now.getFullYear(), now.getMonth(), 1)
@@ -131,11 +131,11 @@ export default function CalendarPage() {
         <section className="mt-6 grid gap-6 xl:grid-cols-12">
           <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white xl:col-span-9">
             <div className="grid grid-cols-7 bg-neutral-50 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
-              {weekDays.map((day) => <div key={day}>{day}</div>)}
+              {Array.from({ length: 7 }, (_, index) => new Date(2026, 0, 4 + index).toLocaleDateString(locale, { weekday: "short" })).map((day) => <div key={day}>{day}</div>)}
             </div>
 
             {loading ? (
-              <div className="flex min-h-[560px] items-center justify-center text-sm text-neutral-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Loading calendar...</div>
+              <div className="flex min-h-[560px] items-center justify-center text-sm text-neutral-400"><Loader2 className="mr-2 h-5 w-5 animate-spin" />{local.loading}</div>
             ) : (
               <div className="grid grid-cols-7 gap-px bg-neutral-200">
                 {cells.map((cell, index) => {
@@ -170,9 +170,9 @@ export default function CalendarPage() {
             <div className="sticky top-6 rounded-2xl border border-neutral-200 bg-white p-5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#4143D5]">{t.selectedDay}</p>
               <h2 className="mt-1 text-lg font-semibold text-neutral-950">
-                {selectedDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                {selectedDate.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric" })}
               </h2>
-              <p className="mt-1 text-xs text-neutral-400">{selectedTasks.length} scheduled tasks</p>
+              <p className="mt-1 text-xs text-neutral-400">{selectedTasks.length} {local.scheduledTasks}</p>
 
               <div className="mt-5 space-y-3">
                 {selectedTasks.length === 0 ? (
@@ -184,14 +184,14 @@ export default function CalendarPage() {
                   <div key={task.id} className="rounded-xl bg-neutral-50 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[10px] font-semibold text-[#4143D5]">
-                        {task.scheduled_at ? new Date(task.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                        {task.scheduled_at ? new Date(task.scheduled_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) : ""}
                       </span>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold capitalize text-neutral-500">{task.status.replace("_", " ")}</span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold capitalize text-neutral-500">{local.status[task.status]}</span>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-neutral-800">{task.title}</p>
                     <div className="mt-1 flex gap-2 text-[10px] text-neutral-400">
                       {task.category && <span>{task.category}</span>}
-                      {task.duration_minutes && <span>· {task.duration_minutes} min</span>}
+                      {task.duration_minutes && <span>· {task.duration_minutes} {local.min}</span>}
                     </div>
                   </div>
                 ))}
@@ -207,3 +207,9 @@ export default function CalendarPage() {
 function Stat({ label, value }: { label: string; value: string }) {
   return <div className="rounded-2xl border border-neutral-200 bg-white p-5"><p className="text-xs text-neutral-400">{label}</p><p className="mt-2 text-2xl font-bold text-neutral-950">{value}</p></div>
 }
+
+const calendarCopy = {
+  en: { loading: "Loading calendar...", more: "more", scheduledTasks: "scheduled tasks", min: "min", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" } },
+  fr: { loading: "Loading...", more: "plus", scheduledTasks: "taches planifiees", min: "min", status: { todo: "A faire", in_progress: "En cours", completed: "Terminee" } },
+  ar: { loading: "Loading...", more: "more", scheduledTasks: "scheduled tasks", min: "min", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" } },
+} as const
