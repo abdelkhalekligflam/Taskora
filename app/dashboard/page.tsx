@@ -1,3 +1,10 @@
+"use client"
+
+import { usePreferences } from "@/components/providers/preferences-provider"
+import { useEffect, useMemo, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+
+const supabase = createClient()
 import {
   Bell,
   CalendarDays,
@@ -11,34 +18,18 @@ import {
   TrendingUp,
 } from "lucide-react"
 
-const stats = [
-  {
-    label: "Tasks completed",
-    value: "8",
-    detail: "of 12 planned",
-    icon: CheckCircle2,
-  },
-  {
-    label: "Focus time",
-    value: "2h 24m",
-    detail: "3 sessions today",
-    icon: Clock3,
-  },
-  {
-    label: "Daily progress",
-    value: "67%",
-    detail: "On track",
-    icon: Target,
-  },
-  {
-    label: "Current streak",
-    value: "6 days",
-    detail: "Personal best: 11",
-    icon: Flame,
-  },
-]
-
 export default function DashboardPage() {
+  const { t, language } = usePreferences()
+  const [tasks,setTasks]=useState<{id:string;status:string;duration_minutes:number|null}[]>([])
+  useEffect(()=>{async function load(){const {data}=await supabase.from("tasks").select("id,status,duration_minutes");setTasks(data??[])}void load()},[])
+  const completed=useMemo(()=>tasks.filter(x=>x.status==="completed").length,[tasks])
+  const minutes=tasks.reduce((sum,x)=>sum+(x.duration_minutes??0),0)
+  const completion=tasks.length?Math.round(completed/tasks.length*100):0
+  const translatedStats = [
+    { label:t.tasksCompleted,value:String(completed),detail:`${tasks.length} total`,icon:CheckCircle2 },
+    { label:t.focusTime,value:`${Math.round(minutes/60*10)/10}h`,detail:`${minutes} min`,icon:Clock3 },
+    { label:t.dailyProgress,value:`${completion}%`,detail:`${tasks.length-completed} pending`,icon:Target },
+  ]
   return (
     <div className="min-h-screen bg-[#F9F9FD]">
       <header className="flex h-[72px] items-center justify-between border-b border-neutral-200 bg-white px-8 lg:px-10">
@@ -47,7 +38,7 @@ export default function DashboardPage() {
 
           <input
             type="text"
-            placeholder="Search tasks, projects..."
+            placeholder={t.search}
             className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"
           />
 
@@ -72,7 +63,7 @@ export default function DashboardPage() {
             className="flex h-10 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-sm font-semibold text-white transition hover:bg-[#3638BD]"
           >
             <Plus className="h-4 w-4" />
-            New task
+            {t.newTask}
           </button>
         </div>
       </header>
@@ -82,15 +73,15 @@ export default function DashboardPage() {
           <div className="flex items-end justify-between gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4143D5]">
-                Overview
+                {t.overview}
               </p>
 
               <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.03em] text-neutral-950">
-                Good morning.
+                {t.goodMorning}
               </h1>
 
               <p className="mt-2 text-sm text-neutral-500">
-                Here&apos;s what&apos;s happening in your workspace today.
+                {t.overviewIntro}
               </p>
             </div>
 
@@ -101,17 +92,17 @@ export default function DashboardPage() {
 
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-                  Today
+                  {t.today}
                 </p>
                 <p className="mt-0.5 text-sm font-semibold text-neutral-900">
-                  September 25, 2026
+                  {new Date().toLocaleDateString(language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </p>
               </div>
             </div>
           </div>
 
           <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {stats.map((stat) => {
+            {translatedStats.map((stat) => {
               const Icon = stat.icon
 
               return (
@@ -148,10 +139,10 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-neutral-950">
-                    Today&apos;s priorities
+                    {t.todaysPriorities}
                   </p>
                   <p className="mt-1 text-xs text-neutral-400">
-                    Your most important work for today.
+                    {t.prioritiesIntro}
                   </p>
                 </div>
 
@@ -159,7 +150,7 @@ export default function DashboardPage() {
                   type="button"
                   className="text-xs font-semibold text-[#4143D5] transition hover:text-[#3638BD]"
                 >
-                  View daily
+                  {t.viewDaily}
                 </button>
               </div>
 
@@ -167,35 +158,16 @@ export default function DashboardPage() {
                 <div className="text-center">
                   <CheckCircle2 className="mx-auto h-5 w-5 text-neutral-300" />
                   <p className="mt-3 text-sm font-medium text-neutral-600">
-                    Your priorities will appear here
+                    {t.prioritiesEmpty}
                   </p>
                   <p className="mt-1 text-xs text-neutral-400">
-                    Add tasks to start planning your day.
+                    {t.prioritiesEmptyDetail}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="min-h-[260px] rounded-2xl border border-neutral-200 bg-[#111113] p-6 text-white">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
-                Focus engine
-              </p>
-              <p className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
-                Ready to focus?
-              </p>
-              <p className="mt-2 max-w-[320px] text-sm leading-6 text-white/50">
-                Start a focused session and protect time for your highest-priority work.
-              </p>
-
-              <button
-                type="button"
-                className="mt-8 flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100"
-              >
-                <Clock3 className="h-4 w-4" />
-                Start focus session
-              </button>
-            </div>
-          </section>
+            </section>
         </div>
       </div>
     </div>

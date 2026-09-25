@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import Sidebar from "@/components/layout/sidebar"
+import { PreferencesProvider } from "@/components/providers/preferences-provider"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function DashboardLayout({
@@ -19,12 +20,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F9FD]">
-      <Sidebar />
-
-      <main className="min-h-screen lg:pl-[248px]">
-        {children}
-      </main>
-    </div>
+    <PreferencesProvider>
+      <div className="min-h-screen bg-[#F9F9FD] text-neutral-950 transition-colors dark:bg-[#111318] dark:text-neutral-100">
+        <Sidebar />
+        <main className="min-h-screen lg:pl-[248px] rtl:lg:pl-0 rtl:lg:pr-[248px]">
+          {children}
+        </main>
+      </div>
+    </PreferencesProvider>
   )
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -16,13 +15,7 @@ import {
   Target,
 } from "lucide-react"
 
-import { createClient } from "@/lib/supabase/client"
-
-const labels = {
-  en: { workspace: "Workspace", personal: "Personal Workspace", free: "Free plan", overview: "Overview", daily: "Daily", weekly: "Weekly", monthly: "Monthly", analytics: "Analytics", goals: "Goals", calendar: "Calendar", settings: "Settings", help: "Help & support", account: "My Account", member: "Taskora member" },
-  fr: { workspace: "Espace", personal: "Espace personnel", free: "Plan gratuit", overview: "Aperçu", daily: "Quotidien", weekly: "Hebdomadaire", monthly: "Mensuel", analytics: "Analyses", goals: "Objectifs", calendar: "Calendrier", settings: "Paramètres", help: "Aide & support", account: "Mon compte", member: "Membre Taskora" },
-  ar: { workspace: "Workspace", personal: "Personal Workspace", free: "Free plan", overview: "Overview", daily: "Daily", weekly: "Weekly", monthly: "Monthly", analytics: "Analytics", goals: "Goals", calendar: "Calendar", settings: "Settings", help: "Help & support", account: "My Account", member: "Taskora member" },
-} as const
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -36,51 +29,13 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [language, setLanguage] = useState<keyof typeof labels>("en")
-  const [plan, setPlan] = useState("free")
-  const t = labels[language]
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    async function loadPreferences() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("language,theme,plan")
-        .eq("user_id", user.id)
-        .maybeSingle()
-
-      if (!data) return
-
-      setLanguage((data.language as keyof typeof labels) ?? "en")
-      setPlan(data.plan ?? "free")
-
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      document.documentElement.classList.toggle(
-        "dark",
-        data.theme === "dark" || (data.theme === "system" && prefersDark)
-      )
-    }
-
-    void loadPreferences()
-  }, [pathname])
+  const { t } = usePreferences()
 
   const navLabel = (name: string) =>
-    ({
-      Overview: t.overview,
-      Daily: t.daily,
-      Weekly: t.weekly,
-      Monthly: t.monthly,
-      Analytics: t.analytics,
-      Goals: t.goals,
-      Calendar: t.calendar,
-    } as Record<string, string>)[name] ?? name
+    ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar } as Record<string, string>)[name] ?? name
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
+    <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
       <div className="flex h-[72px] items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4143D5] text-white">
@@ -96,8 +51,8 @@ export default function Sidebar() {
       <div className="px-4 pt-3">
         <button type="button" className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-left transition hover:bg-neutral-100 dark:border-neutral-800 dark:bg-[#252830] dark:hover:bg-[#2D3039]">
           <div className="min-w-0">
-            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.personal}</p>
-            <p className="mt-0.5 text-[10px] text-neutral-400">{plan === "pro" ? "Pro" : t.free}</p>
+            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.personalWorkspace}</p>
+            <p className="mt-0.5 text-[10px] text-neutral-400">{t.freePlan}</p>
           </div>
           <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400" />
         </button>
