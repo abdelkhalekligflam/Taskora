@@ -145,7 +145,7 @@ export default function SettingsPage() {
           <div className="rounded-2xl bg-gradient-to-br from-[#4143D5] to-[#30329E] p-6 text-white shadow-sm">
             <div className="flex items-start justify-between"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-5 w-5" /></div><span className="rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">{profile.plan === "pro" ? "Active" : "Free Plan"}</span></div>
             <h2 className="mt-8 text-2xl font-semibold">{profile.plan === "pro" ? "Pro Plan" : "Taskora Free"}</h2>
-            <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">{profile.plan === "pro" ? "Advanced analytics, unlimited spaces and priority support are active." : "Core productivity features are active. Pro subscription will be available in a later billing phase."}</p>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">{profile.plan === "pro" ? "Advanced analytics, unlimited tasks and goals, focus sessions, exports, recurring tasks and reminders are active." : "Core productivity features are active. Pro subscription will be available in a later billing phase."}</p>
             {profile.plan === "pro" ? <button type="button" disabled className="mt-6 h-9 rounded-lg bg-white px-4 text-xs font-semibold text-[#4143D5] opacity-80">Manage subscription</button> : <Link href="/dashboard/upgrade" className="mt-6 inline-flex h-9 items-center rounded-lg bg-white px-4 text-xs font-semibold text-[#4143D5]">Upgrade to Pro</Link>}
           </div>
 
