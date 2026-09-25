@@ -17,9 +17,9 @@ type Reminder = {
 const supabase = createClient()
 
 const copy = {
-  en: { label: "Notifications", title: "Reminders", empty: "No reminders yet.", markAll: "Mark all read", due: "Task reminder", loading: "Loading..." },
-  fr: { label: "Notifications", title: "Rappels", empty: "Aucun rappel pour le moment.", markAll: "Tout marquer comme lu", due: "Rappel de tâche", loading: "Chargement..." },
-  ar: { label: "الإشعارات", title: "التذكيرات", empty: "لا توجد تذكيرات بعد.", markAll: "تحديد الكل كمقروء", due: "تذكير بالمهمة", loading: "جار التحميل..." },
+  en: { label: "Notifications", title: "Reminders", empty: "No reminders yet.", markAll: "Mark all read", due: "Task reminder", loading: "Loading...", unread: "unread", task: "Task" },
+  fr: { label: "Notifications", title: "Rappels", empty: "Aucun rappel pour le moment.", markAll: "Tout marquer comme lu", due: "Rappel de tâche", loading: "Chargement...", unread: "non lus", task: "Tâche" },
+  ar: { label: "الإشعارات", title: "التذكيرات", empty: "لا توجد تذكيرات بعد.", markAll: "تحديد الكل كمقروء", due: "تذكير بالمهمة", loading: "جار التحميل...", unread: "غير مقروء", task: "مهمة" },
 } as const
 
 export default function NotificationBell() {
@@ -91,7 +91,7 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3 dark:border-neutral-800">
             <div>
               <p className="text-sm font-semibold text-neutral-950 dark:text-white">{t.title}</p>
-              <p className="text-[10px] text-neutral-400">{unread} unread</p>
+              <p className="text-[10px] text-neutral-400">{unread} {t.unread}</p>
             </div>
             <div className="flex items-center gap-1">
               {unread > 0 && <button type="button" onClick={() => void markAllRead()} className="flex h-8 items-center gap-1 rounded-lg px-2 text-[10px] font-semibold text-[#4143D5] hover:bg-[#EEEEFF] dark:hover:bg-[#30314F]"><CheckCheck className="h-3.5 w-3.5" />{t.markAll}</button>}
@@ -110,7 +110,7 @@ export default function NotificationBell() {
                   <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]"><Clock3 className="h-4 w-4" /></span>
                   <div className="min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#4143D5]">{t.due}</p>
-                    <p className="mt-0.5 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">{item.tasks?.title ?? "Task"}</p>
+                    <p className="mt-0.5 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">{item.tasks?.title ?? t.task}</p>
                     <p className="mt-1 text-[10px] text-neutral-400">{new Date(item.delivered_at ?? item.remind_at).toLocaleString(locale)}</p>
                   </div>
                 </div>

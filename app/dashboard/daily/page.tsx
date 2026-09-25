@@ -46,6 +46,7 @@ export default function DailyPage() {
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [plan, setPlan] = useState<"free" | "pro">("free")
+  const [searchQuery, setSearchQuery] = useState("")
 
   async function loadTasks() {
     setLoading(true)
@@ -224,6 +225,7 @@ export default function DailyPage() {
           duration_minutes: task.duration_minutes,
           recurrence: task.recurrence,
           reminder_minutes: task.reminder_minutes ?? null,
+          generated_from_task_id: task.id,
         })
         if (recurrenceError) {
           setError(recurrenceError.message)
@@ -247,6 +249,15 @@ export default function DailyPage() {
     )
   }
 
+  const filteredTasks = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return tasks
+    return tasks.filter((task) =>
+      [task.title, task.description, task.category, task.priority, task.status]
+        .some((value) => value?.toLowerCase().includes(query))
+    )
+  }, [tasks, searchQuery])
+
   const completed = useMemo(
     () => tasks.filter((task) => task.status === "completed").length,
     [tasks]
@@ -263,6 +274,8 @@ export default function DailyPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search tasks, projects, tags..."
             className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm outline-none transition focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"
           />
@@ -363,7 +376,7 @@ export default function DailyPage() {
               </div>
             ) : (
               <div className="mt-4 space-y-2">
-                {tasks.map((task) => {
+                {filteredTasks.map((task) => {
                   const isDone = task.status === "completed"
                   return (
                     <div
