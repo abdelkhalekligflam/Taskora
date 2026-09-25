@@ -698,7 +698,13 @@ function getNextOccurrence(date: Date, recurrence: "daily" | "weekly" | "monthly
   const next = new Date(date)
   if (recurrence === "daily") next.setDate(next.getDate() + 1)
   if (recurrence === "weekly") next.setDate(next.getDate() + 7)
-  if (recurrence === "monthly") next.setMonth(next.getMonth() + 1)
+  if (recurrence === "monthly") {
+    const originalDay = next.getDate()
+    next.setDate(1)
+    next.setMonth(next.getMonth() + 1)
+    const lastDayOfTargetMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate()
+    next.setDate(Math.min(originalDay, lastDayOfTargetMonth))
+  }
   return next
 }
 
