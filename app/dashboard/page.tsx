@@ -1,6 +1,10 @@
 "use client"
 
 import { usePreferences } from "@/components/providers/preferences-provider"
+import { useEffect, useMemo, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+
+const supabase = createClient()
 import {
   Bell,
   CalendarDays,
@@ -14,40 +18,17 @@ import {
   TrendingUp,
 } from "lucide-react"
 
-const stats = [
-  {
-    label: "Tasks completed",
-    value: "8",
-    detail: "of 12 planned",
-    icon: CheckCircle2,
-  },
-  {
-    label: "Focus time",
-    value: "2h 24m",
-    detail: "3 sessions today",
-    icon: Clock3,
-  },
-  {
-    label: "Daily progress",
-    value: "67%",
-    detail: "On track",
-    icon: Target,
-  },
-  {
-    label: "Current streak",
-    value: "6 days",
-    detail: "Personal best: 11",
-    icon: Flame,
-  },
-]
-
 export default function DashboardPage() {
   const { t, language } = usePreferences()
+  const [tasks,setTasks]=useState<{id:string;status:string;duration_minutes:number|null}[]>([])
+  useEffect(()=>{async function load(){const {data}=await supabase.from("tasks").select("id,status,duration_minutes");setTasks(data??[])}void load()},[])
+  const completed=useMemo(()=>tasks.filter(x=>x.status==="completed").length,[tasks])
+  const minutes=tasks.reduce((sum,x)=>sum+(x.duration_minutes??0),0)
+  const completion=tasks.length?Math.round(completed/tasks.length*100):0
   const translatedStats = [
-    { ...stats[0], label: t.tasksCompleted },
-    { ...stats[1], label: t.focusTime },
-    { ...stats[2], label: t.dailyProgress },
-    { ...stats[3], label: t.currentStreak },
+    { label:t.tasksCompleted,value:String(completed),detail:`${tasks.length} total`,icon:CheckCircle2 },
+    { label:t.focusTime,value:`${Math.round(minutes/60*10)/10}h`,detail:`${minutes} min`,icon:Clock3 },
+    { label:t.dailyProgress,value:`${completion}%`,detail:`${tasks.length-completed} pending`,icon:Target },
   ]
   return (
     <div className="min-h-screen bg-[#F9F9FD]">
@@ -186,26 +167,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="min-h-[260px] rounded-2xl border border-neutral-200 bg-[#111113] p-6 text-white">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
-                {t.focusEngine}
-              </p>
-              <p className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
-                {t.readyFocus}
-              </p>
-              <p className="mt-2 max-w-[320px] text-sm leading-6 text-white/50">
-                {t.focusDetail}
-              </p>
-
-              <button
-                type="button"
-                className="mt-8 flex h-10 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100"
-              >
-                <Clock3 className="h-4 w-4" />
-                {t.startFocus}
-              </button>
-            </div>
-          </section>
+            </section>
         </div>
       </div>
     </div>
