@@ -490,20 +490,6 @@ export default function DailyPage() {
 
               {plan === "pro" && <div className="grid gap-4 sm:grid-cols-2"><Field label="Repeat"><select name="recurrence" defaultValue="none" className="input-taskora"><option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></Field><Field label="Reminder"><select name="reminder_minutes" defaultValue="" className="input-taskora"><option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option></select></Field></div>}
 
-              {plan === "pro" && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Repeat">
-                <select name="recurrence" defaultValue={task.recurrence ?? "none"} className="input-taskora">
-                  <option value="none">Never</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
-                </select>
-              </Field>
-              <Field label="Reminder">
-                <select name="reminder_minutes" defaultValue={task.reminder_minutes ?? ""} className="input-taskora">
-                  <option value="">No reminder</option><option value="10">10 min before</option><option value="30">30 min before</option><option value="60">1 hour before</option><option value="1440">1 day before</option>
-                </select>
-              </Field>
-            </div>
-          )}
           <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
                 <button type="button" onClick={() => setShowForm(false)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
                   Cancel
@@ -665,6 +651,27 @@ function TaskFormModal({
               <input name="duration_minutes" type="number" min="1" defaultValue={task.duration_minutes ?? ""} className="input-taskora" />
             </Field>
           </div>
+          {plan === "pro" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Repeat">
+                <select name="recurrence" defaultValue={task.recurrence ?? "none"} className="input-taskora">
+                  <option value="none">Never</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </Field>
+              <Field label="Reminder">
+                <select name="reminder_minutes" defaultValue={task.reminder_minutes ?? ""} className="input-taskora">
+                  <option value="">No reminder</option>
+                  <option value="10">10 min before</option>
+                  <option value="30">30 min before</option>
+                  <option value="60">1 hour before</option>
+                  <option value="1440">1 day before</option>
+                </select>
+              </Field>
+            </div>
+          )}
           <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
             <button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
               Cancel
