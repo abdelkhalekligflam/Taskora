@@ -150,7 +150,7 @@ export default function GoalsPage() {
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
           <div className="border-b border-neutral-100 pb-4">
             <h2 className="text-lg font-semibold text-neutral-950">{g.yourGoals}</h2>
-            <p className="mt-1 text-xs text-neutral-400">Progress is stored securely in your Taskora account.</p>
+            <p className="mt-1 text-xs text-neutral-400">{g.stored}</p>
           </div>
 
           {loading ? (
@@ -159,8 +159,8 @@ export default function GoalsPage() {
             <div className="flex min-h-[300px] flex-col items-center justify-center text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEEFF] text-[#4143D5]"><Target className="h-5 w-5" /></div>
               <h3 className="mt-4 text-sm font-semibold text-neutral-900">{g.empty}</h3>
-              <p className="mt-1 text-xs text-neutral-400">Create a measurable long-term objective.</p>
-              <button onClick={() => setShowCreate(true)} className="mt-4 rounded-lg bg-[#4143D5] px-4 py-2 text-xs font-semibold text-white">Create first goal</button>
+              <p className="mt-1 text-xs text-neutral-400">{g.createHint}</p>
+              <button onClick={() => setShowCreate(true)} className="mt-4 rounded-lg bg-[#4143D5] px-4 py-2 text-xs font-semibold text-white">{g.createFirst}</button>
             </div>
           ) : (
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -185,7 +185,7 @@ export default function GoalsPage() {
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-200"><div className="h-full rounded-full bg-[#4143D5]" style={{ width: `${progress}%` }} /></div>
                     <div className="mt-4 flex items-center justify-between">
-                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `Target: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString(locale)}` : g.noDeadline}</div>
+                      <div className="text-[10px] text-neutral-400">{goal.target_date ? `${g.targetLabel}: ${new Date(goal.target_date + "T00:00:00").toLocaleDateString(locale)}` : g.noDeadline}</div>
                       <button onClick={() => void completeGoal(goal)} className={`rounded-lg px-3 py-1.5 text-[10px] font-semibold ${goal.status === "completed" ? "bg-emerald-50 text-emerald-700" : "bg-white text-[#4143D5]"}`}>
                         {goal.status === "completed" ? g.completed : g.markComplete}
                       </button>
@@ -198,7 +198,7 @@ export default function GoalsPage() {
         </section>
       </div>
 
-      {(showCreate || editing) && <GoalModal goal={editing} saving={saving} onClose={() => { setShowCreate(false); setEditing(null) }} onSubmit={(event) => void saveGoal(event, editing ?? undefined)} />}
+      {(showCreate || editing) && <GoalModal goal={editing} saving={saving} labels={g} onClose={() => { setShowCreate(false); setEditing(null) }} onSubmit={(event) => void saveGoal(event, editing ?? undefined)} />}
 
       {deleting && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
@@ -217,24 +217,24 @@ export default function GoalsPage() {
   )
 }
 
-function GoalModal({ goal, saving, onClose, onSubmit }: { goal: Goal | null; saving: boolean; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+function GoalModal({ goal, saving, labels, onClose, onSubmit }: { goal: Goal | null; saving: boolean; labels: typeof goalLabels[keyof typeof goalLabels]; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="flex justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-wider text-[#4143D5]">Taskora Goals</p><h2 className="mt-1 text-xl font-semibold">{goal ? "Edit goal" : "Create goal"}</h2></div><button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100"><X className="h-4 w-4" /></button></div>
+        <div className="flex justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-wider text-[#4143D5]">Taskora Goals</p><h2 className="mt-1 text-xl font-semibold">{goal ? labels.editGoal : labels.createGoal}</h2></div><button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100"><X className="h-4 w-4" /></button></div>
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
-          <Field label="Title"><input name="title" required maxLength={200} defaultValue={goal?.title ?? ""} className="goal-input" /></Field>
-          <Field label="Description"><textarea name="description" rows={3} defaultValue={goal?.description ?? ""} className="goal-input h-auto resize-none py-2.5" /></Field>
+          <Field label={labels.titleLabel}><input name="title" required maxLength={200} defaultValue={goal?.title ?? ""} className="goal-input" /></Field>
+          <Field label={labels.descriptionLabel}><textarea name="description" rows={3} defaultValue={goal?.description ?? ""} className="goal-input h-auto resize-none py-2.5" /></Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Current"><input name="current_value" type="number" min="0" step="any" defaultValue={goal?.current_value ?? 0} className="goal-input" /></Field>
-            <Field label="Target"><input name="target_value" type="number" min="0" step="any" required defaultValue={goal?.target_value ?? ""} className="goal-input" /></Field>
-            <Field label="Unit"><input name="unit" placeholder="tasks, hours..." defaultValue={goal?.unit ?? ""} className="goal-input" /></Field>
+            <Field label={labels.currentLabel}><input name="current_value" type="number" min="0" step="any" defaultValue={goal?.current_value ?? 0} className="goal-input" /></Field>
+            <Field label={labels.targetValueLabel}><input name="target_value" type="number" min="0" step="any" required defaultValue={goal?.target_value ?? ""} className="goal-input" /></Field>
+            <Field label={labels.unitLabel}><input name="unit" placeholder="tasks, hours..." defaultValue={goal?.unit ?? ""} className="goal-input" /></Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Target date"><input name="target_date" type="date" defaultValue={goal?.target_date ?? ""} className="goal-input" /></Field>
-            <Field label="Status"><select name="status" defaultValue={goal?.status ?? "active"} className="goal-input"><option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option><option value="archived">Archived</option></select></Field>
+            <Field label={labels.targetDateLabel}><input name="target_date" type="date" defaultValue={goal?.target_date ?? ""} className="goal-input" /></Field>
+            <Field label={labels.statusLabel}><select name="status" defaultValue={goal?.status ?? "active"} className="goal-input"><option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option><option value="archived">Archived</option></select></Field>
           </div>
-          <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4"><button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">Cancel</button><button disabled={saving} className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {goal ? "Save changes" : "Create goal"}</button></div>
+          <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4"><button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">{labels.cancel}</button><button disabled={saving} className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {goal ? labels.save : labels.createGoal}</button></div>
         </form>
       </div>
       <style jsx global>{`.goal-input{height:40px;width:100%;border-radius:8px;border:1px solid #e5e5e5;background:#fafafa;padding:0 12px;font-size:13px;outline:none}.goal-input:focus{border-color:#4143d5;background:white;box-shadow:0 0 0 2px rgba(65,67,213,.1)}`}</style>
@@ -251,7 +251,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 const goalLabels = {
- en: { goals:"Goals", heading:"Long-term Objectives", intro:"Set measurable targets and track progress over time.", newGoal:"New goal", total:"Total Goals", active:"Active", completed:"Completed", yourGoals:"Your goals", loading:"Loading goals...", empty:"No goals yet", progress:"Progress", noDeadline:"No deadline", markComplete:"Mark complete" },
- fr: { goals:"Objectifs", heading:"Objectifs a long terme", intro:"Definissez des objectifs mesurables et suivez leur progression.", newGoal:"Nouvel objectif", total:"Total des objectifs", active:"Actifs", completed:"Termines", yourGoals:"Vos objectifs", loading:"Chargement des objectifs...", empty:"Aucun objectif", progress:"Progression", noDeadline:"Aucune echeance", markComplete:"Marquer termine" },
- ar: { goals:"الاهداف", heading:"الاهداف طويلة المدى", intro:"حدد اهدافا قابلة للقياس وتابع تقدمها مع الوقت.", newGoal:"هدف جديد", total:"اجمالي الاهداف", active:"نشطة", completed:"مكتملة", yourGoals:"اهدافك", loading:"جاري تحميل الاهداف...", empty:"لا توجد اهداف", progress:"التقدم", noDeadline:"بدون موعد نهائي", markComplete:"وضع علامة مكتمل" }
+ en: { goals:"Goals", heading:"Long-term Objectives", intro:"Set measurable targets and track progress over time.", newGoal:"New goal", total:"Total Goals", active:"Active", completed:"Completed", yourGoals:"Your goals", loading:"Loading goals...", empty:"No goals yet", progress:"Progress", noDeadline:"No deadline", markComplete:"Mark complete", stored:"Progress is stored securely in your Taskora account.", createHint:"Create a measurable long-term objective.", createFirst:"Create first goal", targetLabel:"Target", editGoal:"Edit goal", createGoal:"Create goal", titleLabel:"Title", descriptionLabel:"Description", currentLabel:"Current", targetValueLabel:"Target", unitLabel:"Unit", targetDateLabel:"Target date", statusLabel:"Status", cancel:"Cancel", save:"Save changes" },
+ fr: { goals:"Objectifs", heading:"Objectifs à long terme", intro:"Définissez des objectifs mesurables et suivez leur progression.", newGoal:"Nouvel objectif", total:"Total des objectifs", active:"Actifs", completed:"Terminés", yourGoals:"Vos objectifs", loading:"Chargement des objectifs...", empty:"Aucun objectif", progress:"Progression", noDeadline:"Aucune échéance", markComplete:"Marquer terminé", stored:"La progression est enregistrée dans votre compte Taskora.", createHint:"Créez un objectif à long terme mesurable.", createFirst:"Créer le premier objectif", targetLabel:"Cible", editGoal:"Modifier l’objectif", createGoal:"Créer un objectif", titleLabel:"Titre", descriptionLabel:"Description", currentLabel:"Actuel", targetValueLabel:"Cible", unitLabel:"Unité", targetDateLabel:"Date cible", statusLabel:"Statut", cancel:"Annuler", save:"Enregistrer" },
+ ar: { goals:"الأهداف", heading:"الأهداف طويلة المدى", intro:"حدد أهدافا قابلة للقياس وتابع تقدمها مع الوقت.", newGoal:"هدف جديد", total:"إجمالي الأهداف", active:"نشطة", completed:"مكتملة", yourGoals:"أهدافك", loading:"جاري تحميل الأهداف...", empty:"لا توجد أهداف", progress:"التقدم", noDeadline:"بدون موعد نهائي", markComplete:"وضع علامة مكتمل", stored:"يتم حفظ التقدم في حساب Taskora الخاص بك.", createHint:"أنشئ هدفا طويل المدى قابلا للقياس.", createFirst:"إنشاء أول هدف", targetLabel:"الهدف", editGoal:"تعديل الهدف", createGoal:"إنشاء هدف", titleLabel:"العنوان", descriptionLabel:"الوصف", currentLabel:"الحالي", targetValueLabel:"المستهدف", unitLabel:"الوحدة", targetDateLabel:"التاريخ المستهدف", statusLabel:"الحالة", cancel:"إلغاء", save:"حفظ التغييرات" }
 } as const
