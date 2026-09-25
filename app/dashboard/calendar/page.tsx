@@ -157,7 +157,7 @@ export default function CalendarPage() {
                             {task.title}
                           </div>
                         ))}
-                        {dayTasks.length > 3 && <p className="px-1 text-[9px] font-semibold text-[#4143D5]">+{dayTasks.length - 3} more</p>}
+                        {dayTasks.length > 3 && <p className="px-1 text-[9px] font-semibold text-[#4143D5]">+{dayTasks.length - 3} {local.more}</p>}
                       </div>
                     </button>
                   )
@@ -210,6 +210,6 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const calendarCopy = {
   en: { loading: "Loading calendar...", more: "more", scheduledTasks: "scheduled tasks", min: "min", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" } },
-  fr: { loading: "Loading...", more: "plus", scheduledTasks: "taches planifiees", min: "min", status: { todo: "A faire", in_progress: "En cours", completed: "Terminee" } },
-  ar: { loading: "Loading...", more: "more", scheduledTasks: "scheduled tasks", min: "min", status: { todo: "Todo", in_progress: "In progress", completed: "Completed" } },
+  fr: { loading: "Chargement...", more: "de plus", scheduledTasks: "tâches planifiées", min: "min", status: { todo: "À faire", in_progress: "En cours", completed: "Terminée" } },
+  ar: { loading: "جاري التحميل...", more: "إضافية", scheduledTasks: "مهام مجدولة", min: "دقيقة", status: { todo: "للإنجاز", in_progress: "قيد التنفيذ", completed: "مكتملة" } },
 } as const

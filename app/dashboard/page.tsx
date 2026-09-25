@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { Bell, CalendarDays, CheckCircle2, Clock3, Command, Plus, Search, Target } from "lucide-react"
+import { CalendarDays, CheckCircle2, Clock3, Command, Plus, Search, Target } from "lucide-react"
 import { usePreferences } from "@/components/providers/preferences-provider"
 import { createClient } from "@/lib/supabase/client"
+import NotificationBell from "@/components/notifications/notification-bell"
 
 type Task = {
   id: string
@@ -27,6 +28,7 @@ export default function DashboardPage() {
   const { t, language } = usePreferences()
   const tx = copy[language]
   const [tasks, setTasks] = useState<Task[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
     async function load() {
@@ -52,7 +54,8 @@ export default function DashboardPage() {
       if (!b.scheduled_at) return -1
       return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
     })
-    .slice(0, 5), [tasks])
+    .filter((task) => !searchQuery.trim() || task.title.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    .slice(0, 5), [tasks, searchQuery])
 
   const stats = [
     { label: t.tasksCompleted, value: String(completed), detail: `${tasks.length} ${tx.total}`, icon: CheckCircle2 },
@@ -66,11 +69,11 @@ export default function DashboardPage() {
     <header className="flex h-[72px] items-center justify-between border-b border-neutral-200 bg-white px-4 sm:px-8 lg:px-10">
       <div className="relative w-full max-w-[420px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"/>
-        <input type="text" placeholder={t.search} className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"/>
+        <input type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t.search} className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"/>
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[10px] text-neutral-400"><Command className="h-3 w-3"/><span>K</span></div>
       </div>
       <div className="ml-3 flex items-center gap-2 sm:ml-6 sm:gap-3">
-        <button type="button" className="relative hidden h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 sm:flex" aria-label={tx.notifications}><Bell className="h-[18px] w-[18px]"/></button>
+        <div className="hidden sm:block"><NotificationBell /></div>
         <Link href="/dashboard/daily" className="flex h-10 items-center gap-2 rounded-lg bg-[#4143D5] px-3 text-sm font-semibold text-white sm:px-4"><Plus className="h-4 w-4"/><span className="hidden sm:inline">{t.newTask}</span></Link>
       </div>
     </header>
