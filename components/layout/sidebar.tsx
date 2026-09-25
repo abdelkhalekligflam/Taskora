@@ -10,6 +10,8 @@ import {
   ChevronDown,
   CircleHelp,
   LayoutDashboard,
+  TimerReset,
+  FileDown,
   Settings,
   Sparkles,
   Target,
@@ -25,6 +27,8 @@ const navigation = [
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Goals", href: "/dashboard/goals", icon: Target },
   { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
+  { name: "Focus", href: "/dashboard/focus", icon: TimerReset, pro: true },
+  { name: "Reports", href: "/dashboard/reports", icon: FileDown, pro: true },
 ]
 
 export default function Sidebar() {
@@ -32,7 +36,7 @@ export default function Sidebar() {
   const { t } = usePreferences()
 
   const navLabel = (name: string) =>
-    ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar } as Record<string, string>)[name] ?? name
+    ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar, Focus: "Focus", Reports: "Reports" } as Record<string, string>)[name] ?? name
 
   return (
     <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
@@ -68,7 +72,7 @@ export default function Sidebar() {
             return (
               <Link key={item.name} href={item.href} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${active ? "bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100"}`}>
                 <Icon className="h-[18px] w-[18px]" />
-                <span>{navLabel(item.name)}</span>
+                <span>{navLabel(item.name)}</span>{item.pro && <span className="ms-auto rounded bg-[#EEEEFF] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">Pro</span>}
               </Link>
             )
           })}
