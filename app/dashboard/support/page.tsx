@@ -1,0 +1,87 @@
+"use client"
+
+import Link from "next/link"
+import { BookOpen, CircleHelp, ExternalLink, LifeBuoy, MessageSquareText } from "lucide-react"
+import { usePreferences } from "@/components/providers/preferences-provider"
+
+const copy = {
+  en: {
+    eyebrow: "Support", title: "Help & support", intro: "Find quick answers and learn how the main Taskora workflows work.",
+    faq: "Frequently asked questions",
+    items: [
+      ["Where is my data stored?", "Your tasks, goals and profile preferences are stored in your Taskora account through Supabase."],
+      ["How do I change language or theme?", "Open Settings, then use Language & Region or Appearance. Your preferences are saved to your profile."],
+      ["How do I plan a task?", "Create or edit a task in Daily and add a schedule. Scheduled tasks then appear in Calendar, Weekly and Monthly views."],
+      ["How do goals work?", "Create a goal, set its current and target values, optionally add a deadline, and update progress as you work."],
+    ],
+    quick: "Quick links", daily: "Manage tasks", settings: "Preferences", goals: "Manage goals",
+    contactTitle: "Need more help?", contact: "Direct support messaging is not connected yet. This section will become the contact channel when support is configured.",
+    coming: "Support channel coming soon",
+  },
+  fr: {
+    eyebrow: "Support", title: "Aide & support", intro: "Trouvez des réponses rapides et découvrez le fonctionnement des principaux outils Taskora.",
+    faq: "Questions fréquentes",
+    items: [
+      ["Où sont stockées mes données ?", "Vos tâches, objectifs et préférences de profil sont stockés dans votre compte Taskora via Supabase."],
+      ["Comment changer la langue ou le thème ?", "Ouvrez Paramètres, puis Langue et région ou Apparence. Vos préférences sont enregistrées dans votre profil."],
+      ["Comment planifier une tâche ?", "Créez ou modifiez une tâche dans Quotidien et ajoutez une date. Elle apparaîtra ensuite dans Calendrier, Hebdomadaire et Mensuel."],
+      ["Comment fonctionnent les objectifs ?", "Créez un objectif, définissez les valeurs actuelle et cible, ajoutez éventuellement une échéance et mettez à jour la progression."],
+    ],
+    quick: "Liens rapides", daily: "Gérer les tâches", settings: "Préférences", goals: "Gérer les objectifs",
+    contactTitle: "Besoin de plus d'aide ?", contact: "La messagerie de support direct n'est pas encore connectée. Cette section deviendra le canal de contact une fois le support configuré.",
+    coming: "Canal de support bientôt disponible",
+  },
+  ar: {
+    eyebrow: "الدعم", title: "المساعدة والدعم", intro: "اعثر على إجابات سريعة وتعرف على طريقة استخدام أهم أدوات Taskora.",
+    faq: "الأسئلة الشائعة",
+    items: [
+      ["أين يتم حفظ بياناتي؟", "يتم حفظ مهامك وأهدافك وتفضيلات ملفك في حساب Taskora عبر Supabase."],
+      ["كيف أغير اللغة أو المظهر؟", "افتح الإعدادات ثم اللغة والمنطقة أو المظهر. يتم حفظ تفضيلاتك في ملفك."],
+      ["كيف أخطط لمهمة؟", "أنشئ أو عدل مهمة في الصفحة اليومية وأضف موعدا. ستظهر بعدها في التقويم والعرض الأسبوعي والشهري."],
+      ["كيف تعمل الأهداف؟", "أنشئ هدفا وحدد القيمة الحالية والمستهدفة ويمكنك إضافة موعد نهائي ثم تحديث التقدم."],
+    ],
+    quick: "روابط سريعة", daily: "إدارة المهام", settings: "التفضيلات", goals: "إدارة الأهداف",
+    contactTitle: "تحتاج مساعدة إضافية؟", contact: "قناة الدعم المباشر غير متصلة بعد. سيصبح هذا القسم قناة التواصل عند إعداد الدعم.",
+    coming: "قناة الدعم قريبا",
+  },
+} as const
+
+export default function SupportPage() {
+  const { language } = usePreferences()
+  const t = copy[language]
+
+  return (
+    <main className="min-h-screen bg-[#F9F9FD] px-4 py-8 text-neutral-950 dark:bg-[#15171C] dark:text-neutral-100 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]"><LifeBuoy className="h-5 w-5"/></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4143D5]">{t.eyebrow}</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">{t.title}</h1></div>
+        </div>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-500 dark:text-neutral-400">{t.intro}</p>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_300px]">
+          <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-[#1C1F26] sm:p-6">
+            <div className="flex items-center gap-2"><CircleHelp className="h-4 w-4 text-[#4143D5]"/><h2 className="text-sm font-semibold">{t.faq}</h2></div>
+            <div className="mt-5 divide-y divide-neutral-100 dark:divide-neutral-800">
+              {t.items.map(([question, answer]) => <div key={question} className="py-4 first:pt-0 last:pb-0"><h3 className="text-sm font-semibold">{question}</h3><p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">{answer}</p></div>)}
+            </div>
+          </section>
+
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-[#1C1F26]">
+              <div className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-[#4143D5]"/><h2 className="text-sm font-semibold">{t.quick}</h2></div>
+              <div className="mt-4 space-y-2">
+                {[[t.daily,"/dashboard/daily"],[t.goals,"/dashboard/goals"],[t.settings,"/dashboard/settings"]].map(([label,href]) => <Link key={href} href={href} className="flex items-center justify-between rounded-lg border border-neutral-100 px-3 py-2.5 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-[#252830]"><span>{label}</span><ExternalLink className="h-3.5 w-3.5 text-neutral-400"/></Link>)}
+              </div>
+            </section>
+            <section className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-[#1C1F26]">
+              <div className="flex items-center gap-2"><MessageSquareText className="h-4 w-4 text-[#4143D5]"/><h2 className="text-sm font-semibold">{t.contactTitle}</h2></div>
+              <p className="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400">{t.contact}</p>
+              <div className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5 text-xs font-medium text-neutral-500 dark:bg-[#252830] dark:text-neutral-400">{t.coming}</div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
