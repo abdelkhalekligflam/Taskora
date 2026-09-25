@@ -1,79 +1,148 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { FormEvent, useEffect, useMemo, useState } from "react"
 import {
   Bell,
-  Brain,
   Check,
-  ChevronLeft,
-  ChevronRight,
-  CirclePlus,
   Clock3,
   Command,
-  Headphones,
-  List,
-  Pause,
-  Play,
+  Loader2,
   Plus,
   Search,
-  SkipForward,
-  Sparkles,
-  Timer,
+  X,
 } from "lucide-react"
 
-const timeline = [
-  {
-    time: "08:00 AM",
-    title: "Morning Routine & Daily Planning",
-    meta: "Completed",
-    completed: true,
-  },
-  {
-    time: "09:30 AM",
-    title: "Deep Work: Architecture Refactor",
-    meta: "09:30 – 11:00 AM · Development",
-    active: true,
-  },
-  {
-    time: "11:30 AM",
-    title: "Design Sync with Team",
-    meta: "11:30 AM · Design",
-  },
-  {
-    time: "12:30 PM",
-    title: "Lunch & Walk Break",
-    meta: "12:30 – 01:30 PM · Personal",
-  },
-  {
-    time: "02:00 PM",
-    title: "Quarterly Revenue Review",
-    meta: "02:00 – 03:30 PM · High Priority",
-  },
-  {
-    time: "04:00 PM",
-    title: "Inbox Zero & Async Reviews",
-    meta: "04:00 – 05:00 PM · Admin",
-  },
-]
+import { createClient } from "@/lib/supabase/client"
+
+type Task = {
+  id: string
+  title: string
+  description: string | null
+  category: string | null
+  priority: "low" | "medium" | "high"
+  status: "todo" | "in_progress" | "completed"
+  scheduled_at: string | null
+  duration_minutes: number | null
+  completed_at: string | null
+  created_at: string
+}
+
+const supabase = createClient()
 
 export default function DailyPage() {
-  const [secondsLeft, setSecondsLeft] = useState(18 * 60 + 42)
-  const [running, setRunning] = useState(true)
-  const [view, setView] = useState<"timeline" | "list">("timeline")
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function loadTasks() {
+    setLoading(true)
+    setError(null)
+
+    const { data, error: queryError } = await supabase
+      .from("tasks")
+      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at")
+      .order("scheduled_at", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+
+    if (queryError) {
+      setError(queryError.message)
+    } else {
+      setTasks((data ?? []) as Task[])
+    }
+
+    setLoading(false)
+  }
 
   useEffect(() => {
-    if (!running || secondsLeft <= 0) return
+    void loadTasks()
+  }, [])
 
-    const timer = window.setInterval(() => {
-      setSecondsLeft((current) => Math.max(0, current - 1))
-    }, 1000)
+  async function createTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setSaving(true)
+    setError(null)
 
-    return () => window.clearInterval(timer)
-  }, [running, secondsLeft])
+    const form = new FormData(event.currentTarget)
+    const title = String(form.get("title") ?? "").trim()
+    const description = String(form.get("description") ?? "").trim()
+    const category = String(form.get("category") ?? "").trim()
+    const priority = String(form.get("priority") ?? "medium")
+    const scheduledAt = String(form.get("scheduled_at") ?? "")
+    const duration = String(form.get("duration_minutes") ?? "")
 
-  const minutes = Math.floor(secondsLeft / 60)
-  const seconds = secondsLeft % 60
-  const countdown = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      setError("Your session could not be verified. Please sign in again.")
+      setSaving(false)
+      return
+    }
+
+    const { error: insertError } = await supabase.from("tasks").insert({
+      user_id: user.id,
+      title,
+      description: description || null,
+      category: category || null,
+      priority,
+      status: "todo",
+      scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+      duration_minutes: duration ? Number(duration) : null,
+    })
+
+    if (insertError) {
+      setError(insertError.message)
+      setSaving(false)
+      return
+    }
+
+    event.currentTarget.reset()
+    setShowForm(false)
+    setSaving(false)
+    await loadTasks()
+  }
+
+  async function toggleTask(task: Task) {
+    const completed = task.status !== "completed"
+
+    const { error: updateError } = await supabase
+      .from("tasks")
+      .update({
+        status: completed ? "completed" : "todo",
+        completed_at: completed ? new Date().toISOString() : null,
+      })
+      .eq("id", task.id)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
+    setTasks((current) =>
+      current.map((item) =>
+        item.id === task.id
+          ? {
+              ...item,
+              status: completed ? "completed" : "todo",
+              completed_at: completed ? new Date().toISOString() : null,
+            }
+          : item
+      )
+    )
+  }
+
+  const completed = useMemo(
+    () => tasks.filter((task) => task.status === "completed").length,
+    [tasks]
+  )
+
+  const completion = tasks.length
+    ? Math.round((completed / tasks.length) * 100)
+    : 0
 
   return (
     <div className="min-h-screen bg-[#F9F9FD]">
@@ -94,15 +163,14 @@ export default function DailyPage() {
         <div className="ml-6 flex items-center gap-3">
           <button
             type="button"
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500"
             aria-label="Notifications"
           >
             <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#4143D5]" />
           </button>
-
           <button
             type="button"
+            onClick={() => setShowForm(true)}
             className="flex h-10 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-sm font-semibold text-white hover:bg-[#3638BD]"
           >
             <Plus className="h-4 w-4" />
@@ -112,283 +180,240 @@ export default function DailyPage() {
       </header>
 
       <main className="px-8 py-8 lg:px-10">
-        <div className="mx-auto max-w-[1440px]">
-          <section className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
+        <div className="mx-auto max-w-[1200px]">
+          <section className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[#4143D5]" />
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-                  Daily Focus · Wednesday, Oct 24, 2026
-                </p>
-              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#4143D5]">
+                Daily Tasks · Live from Supabase
+              </p>
               <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.035em] text-neutral-950">
-                Today&apos;s Schedule & Focus
+                Today&apos;s Tasks
               </h1>
               <p className="mt-1 text-sm text-neutral-500">
-                4 focus blocks · 8 tasks scheduled · 3h 24m focus logged
+                {tasks.length} tasks · {completed} completed · {completion}% progress
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex h-9 items-center rounded-xl bg-neutral-100 p-1">
-                <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 hover:bg-white">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="px-2 text-xs font-medium text-neutral-800">Today</span>
-                <button type="button" className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 hover:bg-white">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+            <div className="min-w-[260px] rounded-2xl border border-neutral-200 bg-white p-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-neutral-500">Completion</span>
+                <span className="font-bold text-[#4143D5]">{completion}%</span>
               </div>
-
-              <div className="flex h-9 items-center rounded-xl bg-neutral-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => setView("timeline")}
-                  className={`flex h-7 items-center gap-1.5 rounded-lg px-3 text-xs font-medium ${view === "timeline" ? "bg-white text-neutral-950 shadow-sm" : "text-neutral-400"}`}
-                >
-                  <Timer className="h-3.5 w-3.5" />
-                  Timeline
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setView("list")}
-                  className={`flex h-7 items-center gap-1.5 rounded-lg px-3 text-xs font-medium ${view === "list" ? "bg-white text-neutral-950 shadow-sm" : "text-neutral-400"}`}
-                >
-                  <List className="h-3.5 w-3.5" />
-                  List
-                </button>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-100">
+                <div
+                  className="h-full rounded-full bg-[#4143D5] transition-all"
+                  style={{ width: `${completion}%` }}
+                />
               </div>
-
-              <button type="button" className="flex h-9 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-                <CirclePlus className="h-4 w-4" />
-                Add Block
-              </button>
-
-              <button type="button" className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-sm font-semibold text-white hover:bg-[#3638BD]">
-                <Play className="h-4 w-4 fill-current" />
-                Start Focus Session
-              </button>
             </div>
           </section>
 
-          <div className="mt-6 grid gap-6 xl:grid-cols-12">
-            <section className="space-y-5 xl:col-span-8">
-              <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-white p-3.5 md:grid-cols-3">
-                <Metric icon={<Clock3 className="h-4 w-4" />} label="Next Up" value="Design Sync (11:30 AM)" />
-                <Metric icon={<Sparkles className="h-4 w-4" />} label="Daily Velocity" value="75% complete" />
-                <Metric icon={<Brain className="h-4 w-4" />} label="Focus Status" value="Flow state ready" />
+          {error && (
+            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-950">Task list</h2>
+                <p className="mt-1 text-xs text-neutral-400">
+                  Create tasks and mark them complete. Data is stored in your account.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="flex h-9 items-center gap-2 rounded-lg border border-neutral-200 px-3 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                <Plus className="h-4 w-4" />
+                Add task
+              </button>
+            </div>
 
-              <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-                <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
-                  <div className="flex items-center gap-2">
-                    <Clock3 className="h-5 w-5 text-[#4143D5]" />
-                    <h2 className="text-lg font-semibold text-neutral-950">
-                      {view === "timeline" ? "Timeline & Agenda" : "Daily Agenda"}
-                    </h2>
-                  </div>
-                  <div className="hidden gap-4 text-[11px] text-neutral-400 md:flex">
-                    <span>● Completed</span>
-                    <span className="text-[#4143D5]">● In Progress</span>
-                    <span>● Scheduled</span>
-                  </div>
+            {loading ? (
+              <div className="flex min-h-[280px] items-center justify-center text-neutral-400">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Loading tasks...
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="flex min-h-[280px] flex-col items-center justify-center text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEEFF] text-[#4143D5]">
+                  <Check className="h-5 w-5" />
                 </div>
-
-                <div className="mt-5 space-y-4">
-                  {timeline.map((item) => (
-                    <div key={item.time} className="flex gap-4">
-                      <div className="w-[72px] shrink-0 pt-3 text-right text-[11px] font-semibold text-neutral-400">
-                        {item.time}
-                      </div>
-                      <div
-                        className={`flex-1 rounded-xl border p-4 transition ${item.active ? "border-[#C9C9FF] bg-[#EEEEFF]/70" : "border-transparent bg-neutral-50"}`}
+                <h3 className="mt-4 text-sm font-semibold text-neutral-900">No tasks yet</h3>
+                <p className="mt-1 max-w-sm text-xs leading-5 text-neutral-400">
+                  Create your first Taskora task. It will be saved in Supabase and linked to your account.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="mt-4 flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create first task
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-2">
+                {tasks.map((task) => {
+                  const isDone = task.status === "completed"
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50 p-4"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => void toggleTask(task)}
+                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                          isDone
+                            ? "border-[#4143D5] bg-[#4143D5] text-white"
+                            : "border-neutral-300 bg-white text-transparent hover:border-[#4143D5]"
+                        }`}
+                        aria-label={isDone ? "Mark task incomplete" : "Mark task complete"}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-3">
-                            <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${item.completed ? "bg-neutral-200 text-neutral-500" : item.active ? "bg-[#4143D5] text-white" : "bg-white text-neutral-400"}`}>
-                              {item.completed ? <Check className="h-3.5 w-3.5" /> : item.active ? <Timer className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
-                            </div>
-                            <div>
-                              <p className={`text-sm font-medium ${item.completed ? "text-neutral-400 line-through" : "text-neutral-900"}`}>
-                                {item.title}
-                              </p>
-                              <p className="mt-1 text-xs text-neutral-400">{item.meta}</p>
-                            </div>
-                          </div>
-                          {item.active && (
-                            <span className="rounded-full bg-[#4143D5] px-2 py-1 text-[10px] font-semibold text-white">
-                              ACTIVE
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className={`text-sm font-semibold ${isDone ? "text-neutral-400 line-through" : "text-neutral-900"}`}>
+                            {task.title}
+                          </p>
+                          <Priority priority={task.priority} />
+                          {task.category && (
+                            <span className="rounded-md bg-white px-2 py-1 text-[9px] font-semibold text-neutral-500">
+                              {task.category}
                             </span>
                           )}
                         </div>
-
-                        {item.active && (
-                          <div className="mt-4 space-y-2 rounded-lg bg-white/80 p-3 text-xs">
-                            <label className="flex items-center gap-2 text-neutral-400 line-through">
-                              <input type="checkbox" defaultChecked className="accent-[#4143D5]" />
-                              API routes cleanup & auth validation
-                            </label>
-                            <label className="flex items-center gap-2 text-neutral-700">
-                              <input type="checkbox" className="accent-[#4143D5]" />
-                              Database indexing on daily agenda table
-                            </label>
-                            <label className="flex items-center gap-2 text-neutral-700">
-                              <input type="checkbox" className="accent-[#4143D5]" />
-                              Unit tests for batch syncing queue
-                            </label>
-                          </div>
+                        {task.description && (
+                          <p className="mt-1 text-xs leading-5 text-neutral-500">{task.description}</p>
                         )}
+                        <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-neutral-400">
+                          {task.scheduled_at && (
+                            <span className="flex items-center gap-1">
+                              <Clock3 className="h-3 w-3" />
+                              {new Date(task.scheduled_at).toLocaleString()}
+                            </span>
+                          )}
+                          {task.duration_minutes && <span>{task.duration_minutes} min</span>}
+                          <span className="capitalize">{task.status.replace("_", " ")}</span>
+                        </div>
                       </div>
                     </div>
-                  ))}
-
-                  <div className="flex gap-4">
-                    <div className="w-[72px] shrink-0 pt-2 text-right text-[11px] font-semibold text-neutral-300">
-                      01:30 PM
-                    </div>
-                    <button type="button" className="flex-1 rounded-xl border border-dashed border-neutral-200 py-3 text-xs font-medium text-neutral-400 hover:border-[#BDBDFF] hover:text-[#4143D5]">
-                      + Add task or break block
-                    </button>
-                  </div>
-                </div>
+                  )
+                })}
               </div>
-            </section>
-
-            <aside className="space-y-5 xl:col-span-4">
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#4143D5]" />
-                    <h2 className="text-lg font-semibold text-neutral-950">Deep Focus Engine</h2>
-                  </div>
-                  <span className="rounded-md bg-[#EEEEFF] px-2 py-1 text-[10px] font-bold text-[#4143D5]">
-                    SESSION 3/5
-                  </span>
-                </div>
-
-                <div className="mt-4 rounded-xl bg-neutral-50 p-5 text-center">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-                    Elapsed Time Remaining
-                  </p>
-                  <p className="mt-1 text-[42px] font-semibold tracking-[-0.04em] text-neutral-950">
-                    {countdown}
-                  </p>
-                  <p className="mt-1 truncate text-sm font-medium text-[#4143D5]">
-                    Deep Work: Architecture Refactor
-                  </p>
-                  <div className="mt-4 flex items-center gap-2">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200">
-                      <div className="h-full w-[72%] rounded-full bg-[#4143D5]" />
-                    </div>
-                    <span className="text-[10px] font-semibold text-neutral-400">72%</span>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  <button type="button" onClick={() => setRunning((value) => !value)} className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-neutral-100 text-xs font-medium text-neutral-700 hover:bg-neutral-200">
-                    {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                    {running ? "Pause" : "Resume"}
-                  </button>
-                  <button type="button" onClick={() => setSecondsLeft((value) => value + 300)} className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-neutral-100 text-xs font-medium text-neutral-700 hover:bg-neutral-200">
-                    <SkipForward className="h-3.5 w-3.5" />
-                    +5m
-                  </button>
-                  <button type="button" onClick={() => { setSecondsLeft(0); setRunning(false) }} className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#4143D5] text-xs font-semibold text-white hover:bg-[#3638BD]">
-                    <Check className="h-3.5 w-3.5" />
-                    Finish
-                  </button>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-xs font-medium text-neutral-700">
-                    <Headphones className="h-4 w-4 text-neutral-400" />
-                    Binaural 40Hz Flow
-                  </div>
-                  <span className="text-[10px] font-semibold text-[#4143D5]">ACTIVE</span>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-neutral-950">The Big 3 Objectives</h2>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Must Finish Today</span>
-                </div>
-                <div className="mt-4 space-y-3">
-                  <Objective title="Finalize Q3 Budget Draft" detail="Done 08:30 AM" done />
-                  <Objective title="Ship Taskora API Documentation v2.4" detail="60% complete · Est. 1h left" active />
-                  <Objective title="Review Design System PR with Elena" detail="At 11:30 AM Sync · 14 components" />
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-neutral-950">Daily Scratchpad</h2>
-                  <span className="rounded-md bg-neutral-100 px-2 py-1 text-[10px] font-medium text-neutral-400">Auto-saved</span>
-                </div>
-                <div className="mt-4 space-y-2 rounded-xl bg-neutral-50 p-3 text-xs leading-5 text-neutral-600">
-                  <p>• Ping Marcus before 3 PM about staging credentials.</p>
-                  <p>• Double check Figma tokens against Tailwind theme mapping.</p>
-                  <p>• Review PR #382 on reactive query hydration.</p>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Type a quick note or task..."
-                  className="mt-3 h-9 w-full rounded-lg bg-neutral-50 px-3 text-xs outline-none focus:ring-2 focus:ring-[#4143D5]/10"
-                />
-              </div>
-            </aside>
-          </div>
+            )}
+          </section>
         </div>
       </main>
+
+      {showForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4143D5]">Taskora</p>
+                <h2 className="mt-1 text-xl font-semibold text-neutral-950">Create task</h2>
+              </div>
+              <button type="button" onClick={() => setShowForm(false)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={createTask} className="mt-5 space-y-4">
+              <Field label="Title">
+                <input name="title" required maxLength={200} placeholder="e.g. Review Taskora dashboard" className="input-taskora" />
+              </Field>
+
+              <Field label="Description">
+                <textarea name="description" rows={3} placeholder="Optional details..." className="input-taskora h-auto resize-none py-2.5" />
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Category">
+                  <input name="category" placeholder="Work, Personal..." className="input-taskora" />
+                </Field>
+                <Field label="Priority">
+                  <select name="priority" defaultValue="medium" className="input-taskora">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Schedule">
+                  <input name="scheduled_at" type="datetime-local" className="input-taskora" />
+                </Field>
+                <Field label="Duration (minutes)">
+                  <input name="duration_minutes" type="number" min="1" placeholder="45" className="input-taskora" />
+                </Field>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+                <button type="button" onClick={() => setShowForm(false)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
+                  Cancel
+                </button>
+                <button disabled={saving} type="submit" className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white disabled:opacity-60">
+                  {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  Create task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        .input-taskora {
+          height: 40px;
+          width: 100%;
+          border-radius: 8px;
+          border: 1px solid #e5e5e5;
+          background: #fafafa;
+          padding-left: 12px;
+          padding-right: 12px;
+          font-size: 13px;
+          color: #171717;
+          outline: none;
+        }
+        .input-taskora:focus {
+          border-color: #4143d5;
+          background: white;
+          box-shadow: 0 0 0 2px rgba(65, 67, 213, 0.1);
+        }
+      `}</style>
     </div>
   )
 }
 
-function Metric({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-neutral-50 px-3 py-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEFF] text-[#4143D5]">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{label}</p>
-        <p className="mt-0.5 truncate text-xs font-semibold text-neutral-800">{value}</p>
-      </div>
-    </div>
+    <label className="block">
+      <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
+        {label}
+      </span>
+      {children}
+    </label>
   )
 }
 
-function Objective({
-  title,
-  detail,
-  done = false,
-  active = false,
-}: {
-  title: string
-  detail: string
-  done?: boolean
-  active?: boolean
-}) {
+function Priority({ priority }: { priority: Task["priority"] }) {
+  const classes = {
+    low: "bg-blue-50 text-blue-700",
+    medium: "bg-amber-50 text-amber-700",
+    high: "bg-red-50 text-red-700",
+  }
+
   return (
-    <div className={`rounded-xl p-3 ${active ? "bg-[#EEEEFF]/70" : "bg-neutral-50"}`}>
-      <div className="flex items-start gap-3">
-        <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${done ? "bg-[#4143D5] text-white" : active ? "border border-[#4143D5] bg-white" : "bg-neutral-200"}`}>
-          {done && <Check className="h-3 w-3" />}
-          {active && <span className="h-2 w-2 rounded-sm bg-[#4143D5]" />}
-        </div>
-        <div className="min-w-0">
-          <p className={`text-sm font-medium ${done ? "text-neutral-400 line-through" : "text-neutral-800"}`}>{title}</p>
-          <p className={`mt-1 text-[11px] ${active ? "font-medium text-[#4143D5]" : "text-neutral-400"}`}>{detail}</p>
-        </div>
-      </div>
-    </div>
+    <span className={`rounded-md px-2 py-1 text-[9px] font-bold uppercase ${classes[priority]}`}>
+      {priority}
+    </span>
   )
 }
