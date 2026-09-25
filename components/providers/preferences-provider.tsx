@@ -41,11 +41,77 @@ const dictionaries = {
 type Dictionary = typeof dictionaries.en
 type ContextValue = { language: AppLanguage; theme: Theme; t: Dictionary }
 
+const uiTranslations: Record<string, { fr: string; ar: string }> = {
+  "Daily Tasks · Live from Supabase": { fr: "Tâches quotidiennes · Données Supabase", ar: "المهام اليومية · بيانات Supabase" },
+  "Today's Tasks": { fr: "Tâches du jour", ar: "مهام اليوم" },
+  "Task list": { fr: "Liste des tâches", ar: "قائمة المهام" },
+  "Completion": { fr: "Progression", ar: "الإنجاز" },
+  "Add task": { fr: "Ajouter une tâche", ar: "إضافة مهمة" },
+  "Create first task": { fr: "Créer la première tâche", ar: "إنشاء أول مهمة" },
+  "No tasks yet": { fr: "Aucune tâche pour le moment", ar: "لا توجد مهام بعد" },
+  "Create tasks and mark them complete. Data is stored in your account.": { fr: "Créez des tâches et marquez-les comme terminées. Les données sont enregistrées dans votre compte.", ar: "أنشئ المهام وحدد المكتمل منها. يتم حفظ البيانات في حسابك." },
+  "Create your first Taskora task. It will be saved in Supabase and linked to your account.": { fr: "Créez votre première tâche Taskora. Elle sera enregistrée et liée à votre compte.", ar: "أنشئ أول مهمة في Taskora. سيتم حفظها وربطها بحسابك." },
+  "Create task": { fr: "Créer une tâche", ar: "إنشاء مهمة" },
+  "Edit task": { fr: "Modifier la tâche", ar: "تعديل المهمة" },
+  "Delete task?": { fr: "Supprimer la tâche ?", ar: "حذف المهمة؟" },
+  "Delete": { fr: "Supprimer", ar: "حذف" }, "Cancel": { fr: "Annuler", ar: "إلغاء" }, "Save changes": { fr: "Enregistrer", ar: "حفظ التغييرات" }, "Saved": { fr: "Enregistré", ar: "تم الحفظ" },
+  "Title": { fr: "Titre", ar: "العنوان" }, "Description": { fr: "Description", ar: "الوصف" }, "Category": { fr: "Catégorie", ar: "الفئة" }, "Priority": { fr: "Priorité", ar: "الأولوية" }, "Schedule": { fr: "Planification", ar: "الجدولة" }, "Duration": { fr: "Durée", ar: "المدة" },
+  "Low": { fr: "Faible", ar: "منخفضة" }, "Medium": { fr: "Moyenne", ar: "متوسطة" }, "High": { fr: "Élevée", ar: "مرتفعة" },
+  "Weekly Planner": { fr: "Planificateur hebdomadaire", ar: "المخطط الأسبوعي" }, "Week View": { fr: "Vue semaine", ar: "عرض الأسبوع" }, "Agenda View": { fr: "Vue agenda", ar: "عرض الأجندة" }, "Weekly Agenda": { fr: "Agenda hebdomadaire", ar: "الأجندة الأسبوعية" },
+  "Start Timer": { fr: "Démarrer le minuteur", ar: "بدء المؤقت" }, "2 days remaining": { fr: "2 jours restants", ar: "يومان متبقيان" }, "16 sessions": { fr: "16 sessions", ar: "16 جلسة" }, "Avg duration: 48m": { fr: "Durée moy. : 48 min", ar: "متوسط المدة: 48 د" },
+  "Monthly View": { fr: "Vue mensuelle", ar: "العرض الشهري" }, "Month": { fr: "Mois", ar: "الشهر" }, "Agenda": { fr: "Agenda", ar: "الأجندة" }, "Add Event": { fr: "Ajouter un événement", ar: "إضافة حدث" }, "Selected Day": { fr: "Jour sélectionné", ar: "اليوم المحدد" }, "Day Velocity": { fr: "Vélocité du jour", ar: "سرعة اليوم" }, "Calendar synced": { fr: "Calendrier synchronisé", ar: "تمت مزامنة التقويم" }, "Monthly Goals": { fr: "Objectifs mensuels", ar: "الأهداف الشهرية" }, "Productivity Heatmap": { fr: "Carte de productivité", ar: "خريطة الإنتاجية" }, "Monthly Insights": { fr: "Analyses mensuelles", ar: "رؤى شهرية" }, "Less": { fr: "Moins", ar: "أقل" }, "More": { fr: "Plus", ar: "أكثر" },
+  "Productivity Insights": { fr: "Analyses de productivité", ar: "تحليلات الإنتاجية" }, "Last 30 Days": { fr: "30 derniers jours", ar: "آخر 30 يوما" }, "Export Report": { fr: "Exporter le rapport", ar: "تصدير التقرير" }, "Weekly Output": { fr: "Production hebdomadaire", ar: "الإنتاج الأسبوعي" }, "Daily task delivery vs planned workload": { fr: "Tâches réalisées par rapport à la charge planifiée", ar: "المهام المنجزة مقارنة بالعمل المخطط" }, "Peak Output": { fr: "Pic de production", ar: "ذروة الإنتاج" }, "Focus Allocation": { fr: "Répartition du focus", ar: "توزيع وقت التركيز" }, "Logged": { fr: "Enregistré", ar: "مسجل" }, "Adjust Schedule": { fr: "Ajuster le planning", ar: "تعديل الجدول" },
+  "Long-term Objectives": { fr: "Objectifs à long terme", ar: "أهداف طويلة المدى" }, "Set measurable targets and track progress over time.": { fr: "Définissez des objectifs mesurables et suivez leur progression.", ar: "حدد أهدافا قابلة للقياس وتابع تقدمها مع الوقت." }, "Your goals": { fr: "Vos objectifs", ar: "أهدافك" }, "Progress": { fr: "Progression", ar: "التقدم" }, "No goals yet": { fr: "Aucun objectif pour le moment", ar: "لا توجد أهداف بعد" }, "Create first goal": { fr: "Créer le premier objectif", ar: "إنشاء أول هدف" }, "Create goal": { fr: "Créer un objectif", ar: "إنشاء هدف" }, "Edit goal": { fr: "Modifier l'objectif", ar: "تعديل الهدف" }, "Delete goal?": { fr: "Supprimer l'objectif ?", ar: "حذف الهدف؟" }, "Mark complete": { fr: "Marquer terminé", ar: "تحديد كمكتمل" }, "Active": { fr: "Actif", ar: "نشط" }, "Paused": { fr: "En pause", ar: "متوقف مؤقتا" }, "Archived": { fr: "Archivé", ar: "مؤرشف" },
+  "Settings": { fr: "Paramètres", ar: "الإعدادات" }, "Workspace Preferences": { fr: "Préférences de l'espace", ar: "تفضيلات مساحة العمل" }, "Manage your Taskora profile and personal preferences.": { fr: "Gérez votre profil Taskora et vos préférences personnelles.", ar: "إدارة ملف Taskora وتفضيلاتك الشخصية." }, "Profile": { fr: "Profil", ar: "الملف الشخصي" }, "Full name": { fr: "Nom complet", ar: "الاسم الكامل" }, "Email": { fr: "E-mail", ar: "البريد الإلكتروني" }, "Appearance": { fr: "Apparence", ar: "المظهر" }, "Choose how Taskora should look.": { fr: "Choisissez l'apparence de Taskora.", ar: "اختر مظهر Taskora." }, "Light": { fr: "Clair", ar: "فاتح" }, "Dark": { fr: "Sombre", ar: "داكن" }, "System": { fr: "Système", ar: "النظام" }, "Language & Region": { fr: "Langue et région", ar: "اللغة والمنطقة" }, "Language": { fr: "Langue", ar: "اللغة" }, "Timezone": { fr: "Fuseau horaire", ar: "المنطقة الزمنية" }, "Notifications": { fr: "Notifications", ar: "الإشعارات" }, "In-app notifications": { fr: "Notifications dans l'application", ar: "إشعارات داخل التطبيق" }, "Email notifications": { fr: "Notifications par e-mail", ar: "إشعارات البريد الإلكتروني" }, "Subscription": { fr: "Abonnement", ar: "الاشتراك" }, "Free Plan": { fr: "Plan gratuit", ar: "الخطة المجانية" }, "Upgrade to Pro": { fr: "Passer à Pro", ar: "الترقية إلى Pro" },
+  "Loading settings...": { fr: "Chargement des paramètres...", ar: "جاري تحميل الإعدادات..." }, "Loading goals...": { fr: "Chargement des objectifs...", ar: "جاري تحميل الأهداف..." }, "Loading calendar...": { fr: "Chargement du calendrier...", ar: "جاري تحميل التقويم..." },
+  "Search tasks, projects, tags...": { fr: "Rechercher tâches, projets, tags...", ar: "ابحث في المهام والمشاريع والوسوم..." }, "New Task": { fr: "Nouvelle tâche", ar: "مهمة جديدة" }, "Today": { fr: "Aujourd'hui", ar: "اليوم" },
+}
+
+const originalText = new WeakMap<Text, string>()
+const originalPlaceholder = new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>()
+
 const PreferencesContext = createContext<ContextValue>({ language:"en", theme:"system", t:dictionaries.en })
 
 function applyTheme(theme: Theme) {
   const dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
   document.documentElement.classList.toggle("dark", dark)
+}
+
+function GlobalTranslator({ language }: { language: AppLanguage }) {
+  useEffect(() => {
+    const translate = () => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+      let node = walker.nextNode() as Text | null
+      while (node) {
+        const parent = node.parentElement
+        if (parent && !["SCRIPT", "STYLE"].includes(parent.tagName)) {
+          const current = node.nodeValue ?? ""
+          if (!originalText.has(node)) originalText.set(node, current)
+          const source = (originalText.get(node) ?? current).trim()
+          const translated = language === "en" ? source : uiTranslations[source]?.[language]
+          if (translated) {
+            const leading = (originalText.get(node) ?? "").match(/^\\s*/)?.[0] ?? ""
+            const trailing = (originalText.get(node) ?? "").match(/\\s*$/)?.[0] ?? ""
+            node.nodeValue = leading + translated + trailing
+          }
+        }
+        node = walker.nextNode() as Text | null
+      }
+
+      document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[placeholder], textarea[placeholder]").forEach((element) => {
+        if (!originalPlaceholder.has(element)) originalPlaceholder.set(element, element.placeholder)
+        const source = originalPlaceholder.get(element) ?? element.placeholder
+        if (language === "en") element.placeholder = source
+        else if (uiTranslations[source]?.[language]) element.placeholder = uiTranslations[source][language]
+      })
+    }
+
+    translate()
+    const observer = new MutationObserver(() => translate())
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [language])
+  return null
 }
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
@@ -69,6 +135,9 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       document.documentElement.dir = nextLanguage === "ar" ? "rtl" : "ltr"
     }
     void load()
+    const reload = () => void load()
+    window.addEventListener("taskora-preferences-updated", reload)
+    return () => window.removeEventListener("taskora-preferences-updated", reload)
   }, [pathname])
 
   useEffect(() => {
@@ -80,7 +149,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   }, [theme])
 
   const value = useMemo(() => ({ language, theme, t: dictionaries[language] as Dictionary }), [language, theme])
-  return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>
+  return <PreferencesContext.Provider value={value}><GlobalTranslator language={language} />{children}</PreferencesContext.Provider>
 }
 
 export function usePreferences() {
