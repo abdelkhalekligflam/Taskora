@@ -7,7 +7,9 @@ import {
   Clock3,
   Command,
   Loader2,
+  Pencil,
   Plus,
+  Trash2,
   Search,
   X,
 } from "lucide-react"
@@ -34,6 +36,8 @@ export default function DailyPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function loadTasks() {
@@ -105,6 +109,66 @@ export default function DailyPage() {
     setShowForm(false)
     setSaving(false)
     await loadTasks()
+  }
+
+  async function updateTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!editingTask) return
+
+    const form = new FormData(event.currentTarget)
+    const title = String(form.get("title") ?? "").trim()
+    const description = String(form.get("description") ?? "").trim()
+    const category = String(form.get("category") ?? "").trim()
+    const priority = String(form.get("priority") ?? "medium")
+    const scheduledAt = String(form.get("scheduled_at") ?? "")
+    const duration = String(form.get("duration_minutes") ?? "")
+
+    setSaving(true)
+    setError(null)
+
+    const { error: updateError } = await supabase
+      .from("tasks")
+      .update({
+        title,
+        description: description || null,
+        category: category || null,
+        priority,
+        scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+        duration_minutes: duration ? Number(duration) : null,
+      })
+      .eq("id", editingTask.id)
+
+    if (updateError) {
+      setError(updateError.message)
+      setSaving(false)
+      return
+    }
+
+    setEditingTask(null)
+    setSaving(false)
+    await loadTasks()
+  }
+
+  async function deleteTask() {
+    if (!deletingTask) return
+
+    setSaving(true)
+    setError(null)
+
+    const { error: deleteError } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", deletingTask.id)
+
+    if (deleteError) {
+      setError(deleteError.message)
+      setSaving(false)
+      return
+    }
+
+    setTasks((current) => current.filter((task) => task.id !== deletingTask.id))
+    setDeletingTask(null)
+    setSaving(false)
   }
 
   async function toggleTask(task: Task) {
@@ -279,7 +343,8 @@ export default function DailyPage() {
                       </button>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
                           <p className={`text-sm font-semibold ${isDone ? "text-neutral-400 line-through" : "text-neutral-900"}`}>
                             {task.title}
                           </p>
@@ -289,6 +354,25 @@ export default function DailyPage() {
                               {task.category}
                             </span>
                           )}
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setEditingTask(task)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-white hover:text-[#4143D5]"
+                              aria-label="Edit task"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingTask(task)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+                              aria-label="Delete task"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                         {task.description && (
                           <p className="mt-1 text-xs leading-5 text-neutral-500">{task.description}</p>
@@ -371,6 +455,40 @@ export default function DailyPage() {
         </div>
       )}
 
+      {editingTask && (
+        <TaskFormModal
+          title="Edit task"
+          submitLabel="Save changes"
+          task={editingTask}
+          saving={saving}
+          onClose={() => setEditingTask(null)}
+          onSubmit={updateTask}
+        />
+      )}
+
+      {deletingTask && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold text-neutral-950">Delete task?</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-500">
+              “{deletingTask.title}” will be permanently deleted.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setDeletingTask(null)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
+                Cancel
+              </button>
+              <button disabled={saving} type="button" onClick={() => void deleteTask()} className="flex h-9 items-center gap-2 rounded-lg bg-red-600 px-4 text-xs font-semibold text-white disabled:opacity-60">
+                {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
         .input-taskora {
           height: 40px;
@@ -416,5 +534,82 @@ function Priority({ priority }: { priority: Task["priority"] }) {
     <span className={`rounded-md px-2 py-1 text-[9px] font-bold uppercase ${classes[priority]}`}>
       {priority}
     </span>
+  )
+}
+
+
+function TaskFormModal({
+  title,
+  submitLabel,
+  task,
+  saving,
+  onClose,
+  onSubmit,
+}: {
+  title: string
+  submitLabel: string
+  task: Task
+  saving: boolean
+  onClose: () => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+}) {
+  const scheduled = task.scheduled_at
+    ? new Date(new Date(task.scheduled_at).getTime() - new Date(task.scheduled_at).getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16)
+    : ""
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4143D5]">Taskora</p>
+            <h2 className="mt-1 text-xl font-semibold text-neutral-950">{title}</h2>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="mt-5 space-y-4">
+          <Field label="Title">
+            <input name="title" required maxLength={200} defaultValue={task.title} className="input-taskora" />
+          </Field>
+          <Field label="Description">
+            <textarea name="description" rows={3} defaultValue={task.description ?? ""} className="input-taskora h-auto resize-none py-2.5" />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Category">
+              <input name="category" defaultValue={task.category ?? ""} className="input-taskora" />
+            </Field>
+            <Field label="Priority">
+              <select name="priority" defaultValue={task.priority} className="input-taskora">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </Field>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Schedule">
+              <input name="scheduled_at" type="datetime-local" defaultValue={scheduled} className="input-taskora" />
+            </Field>
+            <Field label="Duration (minutes)">
+              <input name="duration_minutes" type="number" min="1" defaultValue={task.duration_minutes ?? ""} className="input-taskora" />
+            </Field>
+          </div>
+          <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4">
+            <button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold text-neutral-600">
+              Cancel
+            </button>
+            <button disabled={saving} type="submit" className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white disabled:opacity-60">
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {submitLabel}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 }
