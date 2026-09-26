@@ -180,7 +180,7 @@ export default function SettingsPage() {
 
           <Card icon={<Bell />} title="Notifications" description="Control reminders and product updates.">
             <Toggle label="In-app notifications" detail="Task reminders and important workspace alerts." checked={profile.notifications_enabled} onChange={(value) => setProfile({ ...profile, notifications_enabled: value })} />
-            <Toggle label="Email notifications" detail="Email delivery is not enabled yet." checked={false} onChange={() => undefined} />
+            <Toggle label="Email notifications" detail="Email delivery is not enabled yet." checked={false} onChange={() => undefined} disabled />
           </Card>
 
           <Card icon={<Sparkles />} title="Subscription" description="Your current Taskora access level.">
@@ -214,6 +214,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <label className="block"><span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{label}</span>{children}</label>
 }
 
-function Toggle({ label, detail, checked, onChange }: { label: string; detail: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return <div className="flex items-center justify-between gap-4 rounded-xl bg-neutral-50 p-4"><div><p className="text-xs font-semibold text-neutral-800">{label}</p><p className="mt-1 text-[10px] text-neutral-400">{detail}</p></div><button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? "bg-[#4143D5]" : "bg-neutral-300"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${checked ? "left-6" : "left-1"}`} /></button></div>
+function Toggle({ label, detail, checked, onChange, disabled = false }: { label: string; detail: string; checked: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
+  return <div className="flex items-center justify-between gap-4 rounded-xl bg-neutral-50 p-4"><div><p className="text-xs font-semibold text-neutral-800">{label}</p><p className="mt-1 text-[10px] text-neutral-400">{detail}</p></div><button type="button" role="switch" aria-checked={checked} disabled={disabled} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${checked ? "bg-[#4143D5]" : "bg-neutral-300"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${checked ? "left-6" : "left-1"}`} /></button></div>
 }
