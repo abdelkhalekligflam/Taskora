@@ -142,7 +142,7 @@ export default function AuthPage() {
           {/* SECURITY */}
           <div className="mb-8 flex items-center gap-2 text-xs font-medium text-neutral-400">
             <LockKeyhole className="h-3.5 w-3.5" />
-            <span>End-to-End Encrypted</span>
+            <span>Secure account access</span>
           </div>
 
           {/* TITLE */}
