@@ -80,13 +80,13 @@ export default function GoalsPage() {
       }
     } else {
       if (plan === "free" && goals.filter((item) => item.status !== "archived").length >= 3) {
-        setError("Free plan supports up to 3 goals. Upgrade to Pro for unlimited goals.")
+        setError(g.freeLimit)
         setSaving(false)
         return
       }
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        setError("Your session could not be verified.")
+        setError(g.sessionError)
         setSaving(false)
         return
       }
@@ -208,11 +208,11 @@ export default function GoalsPage() {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
             <Trash2 className="h-6 w-6 text-red-600" />
-            <h2 className="mt-4 text-lg font-semibold">Delete goal?</h2>
-            <p className="mt-2 text-sm text-neutral-500">“{deleting.title}” will be permanently deleted.</p>
+            <h2 className="mt-4 text-lg font-semibold">{g.deleteTitle}</h2>
+            <p className="mt-2 text-sm text-neutral-500">“{deleting.title}” {g.deleteMessage}</p>
             <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setDeleting(null)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">Cancel</button>
-              <button disabled={saving} onClick={() => void deleteGoal()} className="h-9 rounded-lg bg-red-600 px-4 text-xs font-semibold text-white">Delete</button>
+              <button onClick={() => setDeleting(null)} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">{g.cancel}</button>
+              <button disabled={saving} onClick={() => void deleteGoal()} className="h-9 rounded-lg bg-red-600 px-4 text-xs font-semibold text-white">{g.delete}</button>
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ function GoalModal({ goal, saving, labels, onClose, onSubmit }: { goal: Goal | n
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={labels.targetDateLabel}><input name="target_date" type="date" defaultValue={goal?.target_date ?? ""} className="goal-input" /></Field>
-            <Field label={labels.statusLabel}><select name="status" defaultValue={goal?.status ?? "active"} className="goal-input"><option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option><option value="archived">Archived</option></select></Field>
+            <Field label={labels.statusLabel}><select name="status" defaultValue={goal?.status ?? "active"} className="goal-input"><option value="active">{labels.statusActive}</option><option value="paused">{labels.statusPaused}</option><option value="completed">{labels.statusCompleted}</option><option value="archived">{labels.statusArchived}</option></select></Field>
           </div>
           <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4"><button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">{labels.cancel}</button><button disabled={saving} className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {goal ? labels.save : labels.createGoal}</button></div>
         </form>
@@ -260,7 +260,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 const goalLabels = {
- en: { goals:"Goals", heading:"Long-term Objectives", intro:"Set measurable targets and track progress over time.", newGoal:"New goal", total:"Total Goals", active:"Active", completed:"Completed", yourGoals:"Your goals", loading:"Loading goals...", empty:"No goals yet", progress:"Progress", noDeadline:"No deadline", markComplete:"Mark complete", stored:"Progress is stored securely in your Taskora account.", createHint:"Create a measurable long-term objective.", createFirst:"Create first goal", targetLabel:"Target", editGoal:"Edit goal", createGoal:"Create goal", titleLabel:"Title", descriptionLabel:"Description", currentLabel:"Current", targetValueLabel:"Target", unitLabel:"Unit", targetDateLabel:"Target date", statusLabel:"Status", cancel:"Cancel", save:"Save changes" },
- fr: { goals:"Objectifs", heading:"Objectifs à long terme", intro:"Définissez des objectifs mesurables et suivez leur progression.", newGoal:"Nouvel objectif", total:"Total des objectifs", active:"Actifs", completed:"Terminés", yourGoals:"Vos objectifs", loading:"Chargement des objectifs...", empty:"Aucun objectif", progress:"Progression", noDeadline:"Aucune échéance", markComplete:"Marquer terminé", stored:"La progression est enregistrée dans votre compte Taskora.", createHint:"Créez un objectif à long terme mesurable.", createFirst:"Créer le premier objectif", targetLabel:"Cible", editGoal:"Modifier l’objectif", createGoal:"Créer un objectif", titleLabel:"Titre", descriptionLabel:"Description", currentLabel:"Actuel", targetValueLabel:"Cible", unitLabel:"Unité", targetDateLabel:"Date cible", statusLabel:"Statut", cancel:"Annuler", save:"Enregistrer" },
- ar: { goals:"الأهداف", heading:"الأهداف طويلة المدى", intro:"حدد أهدافا قابلة للقياس وتابع تقدمها مع الوقت.", newGoal:"هدف جديد", total:"إجمالي الأهداف", active:"نشطة", completed:"مكتملة", yourGoals:"أهدافك", loading:"جاري تحميل الأهداف...", empty:"لا توجد أهداف", progress:"التقدم", noDeadline:"بدون موعد نهائي", markComplete:"وضع علامة مكتمل", stored:"يتم حفظ التقدم في حساب Taskora الخاص بك.", createHint:"أنشئ هدفا طويل المدى قابلا للقياس.", createFirst:"إنشاء أول هدف", targetLabel:"الهدف", editGoal:"تعديل الهدف", createGoal:"إنشاء هدف", titleLabel:"العنوان", descriptionLabel:"الوصف", currentLabel:"الحالي", targetValueLabel:"المستهدف", unitLabel:"الوحدة", targetDateLabel:"التاريخ المستهدف", statusLabel:"الحالة", cancel:"إلغاء", save:"حفظ التغييرات" }
+ en: { goals:"Goals", heading:"Long-term Objectives", intro:"Set measurable targets and track progress over time.", newGoal:"New goal", total:"Total Goals", active:"Active", completed:"Completed", yourGoals:"Your goals", loading:"Loading goals...", empty:"No goals yet", progress:"Progress", noDeadline:"No deadline", markComplete:"Mark complete", stored:"Progress is stored securely in your Taskora account.", createHint:"Create a measurable long-term objective.", createFirst:"Create first goal", targetLabel:"Target", editGoal:"Edit goal", createGoal:"Create goal", titleLabel:"Title", descriptionLabel:"Description", currentLabel:"Current", targetValueLabel:"Target", unitLabel:"Unit", targetDateLabel:"Target date", statusLabel:"Status", cancel:"Cancel", save:"Save changes", freeLimit:"Free plan supports up to 3 goals. Upgrade to Pro for unlimited goals.", sessionError:"Your session could not be verified.", deleteTitle:"Delete goal?", deleteMessage:"will be permanently deleted.", delete:"Delete", statusActive:"Active", statusPaused:"Paused", statusCompleted:"Completed", statusArchived:"Archived" },
+ fr: { goals:"Objectifs", heading:"Objectifs à long terme", intro:"Définissez des objectifs mesurables et suivez leur progression.", newGoal:"Nouvel objectif", total:"Total des objectifs", active:"Actifs", completed:"Terminés", yourGoals:"Vos objectifs", loading:"Chargement des objectifs...", empty:"Aucun objectif", progress:"Progression", noDeadline:"Aucune échéance", markComplete:"Marquer terminé", stored:"La progression est enregistrée dans votre compte Taskora.", createHint:"Créez un objectif à long terme mesurable.", createFirst:"Créer le premier objectif", targetLabel:"Cible", editGoal:"Modifier l’objectif", createGoal:"Créer un objectif", titleLabel:"Titre", descriptionLabel:"Description", currentLabel:"Actuel", targetValueLabel:"Cible", unitLabel:"Unité", targetDateLabel:"Date cible", statusLabel:"Statut", cancel:"Annuler", save:"Enregistrer", freeLimit:"Le forfait gratuit permet jusqu’à 3 objectifs. Passez à Pro pour des objectifs illimités.", sessionError:"Votre session n’a pas pu être vérifiée.", deleteTitle:"Supprimer l’objectif ?", deleteMessage:"sera supprimé définitivement.", delete:"Supprimer", statusActive:"Actif", statusPaused:"En pause", statusCompleted:"Terminé", statusArchived:"Archivé" },
+ ar: { goals:"الأهداف", heading:"الأهداف طويلة المدى", intro:"حدد أهدافا قابلة للقياس وتابع تقدمها مع الوقت.", newGoal:"هدف جديد", total:"إجمالي الأهداف", active:"نشطة", completed:"مكتملة", yourGoals:"أهدافك", loading:"جاري تحميل الأهداف...", empty:"لا توجد أهداف", progress:"التقدم", noDeadline:"بدون موعد نهائي", markComplete:"وضع علامة مكتمل", stored:"يتم حفظ التقدم في حساب Taskora الخاص بك.", createHint:"أنشئ هدفا طويل المدى قابلا للقياس.", createFirst:"إنشاء أول هدف", targetLabel:"الهدف", editGoal:"تعديل الهدف", createGoal:"إنشاء هدف", titleLabel:"العنوان", descriptionLabel:"الوصف", currentLabel:"الحالي", targetValueLabel:"المستهدف", unitLabel:"الوحدة", targetDateLabel:"التاريخ المستهدف", statusLabel:"الحالة", cancel:"إلغاء", save:"حفظ التغييرات", freeLimit:"تسمح الخطة المجانية بما يصل إلى 3 أهداف. انتقل إلى Pro للحصول على أهداف غير محدودة.", sessionError:"تعذر التحقق من جلستك.", deleteTitle:"حذف الهدف؟", deleteMessage:"سيتم حذفه نهائيا.", delete:"حذف", statusActive:"نشط", statusPaused:"متوقف مؤقتا", statusCompleted:"مكتمل", statusArchived:"مؤرشف" }
 } as const
