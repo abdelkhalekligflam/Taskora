@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Taskora
 
-## Getting Started
+A modern productivity application built with Next.js and Supabase, focused on a clean user experience, reusable UI, and a scalable application structure.
 
-First, run the development server:
+## Overview
+
+Taskora is a front-end focused productivity project designed around clear workflows and a polished interface. It demonstrates modern React/Next.js development, reusable components, authentication-ready application structure, and Supabase integration.
+
+## Tech Stack
+
+**Next.js · React · TypeScript · Supabase · Tailwind CSS · shadcn/ui · Radix UI**
+
+## Highlights
+
+- Modern responsive interface
+- Reusable component-driven UI
+- Supabase integration
+- Type-safe development with TypeScript
+- App Router architecture
+- Accessible UI primitives with shadcn/ui and Radix UI
+- Responsive layouts for desktop and mobile
+
+## Local Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For a production check:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## Project Goal
 
-To learn more about Next.js, take a look at the following resources:
+Taskora was built as a practical project for developing and applying modern front-end skills with Next.js, TypeScript, component-based UI, and backend integration.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by [Abdelkhalek Ligflam](https://github.com/abdelkhalekligflam) · [Portfolio](https://portfolio-one-self-87.vercel.app/)
