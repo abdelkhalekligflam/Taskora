@@ -63,11 +63,25 @@ export default function Sidebar() {
 
   const initials = (accountName || accountEmail || "T").trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "T"
   const logoutLabel = language === "fr" ? "Déconnexion" : language === "ar" ? "تسجيل الخروج" : "Sign out"
+  const openNavLabel = language === "fr" ? "Ouvrir la navigation" : language === "ar" ? "فتح القائمة" : "Open navigation"
+  const closeNavLabel = language === "fr" ? "Fermer la navigation" : language === "ar" ? "إغلاق القائمة" : "Close navigation"
 
   const navLabel = (name: string) =>
     ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar, Focus: language === "fr" ? "Focus" : language === "ar" ? "التركيز" : "Focus", Reports: language === "fr" ? "Rapports" : language === "ar" ? "التقارير" : "Reports" } as Record<string, string>)[name] ?? name
 
   useEffect(() => setMobileOpen(false), [pathname])
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileOpen(false)
+    }
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [mobileOpen])
 
   const navItems = navigation.map((item) => {
     const Icon = item.icon
@@ -77,8 +91,8 @@ export default function Sidebar() {
 
   return (
     <>
-    <button type="button" onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#4143D5] text-white shadow-lg lg:hidden rtl:right-auto rtl:left-5"><Menu className="h-5 w-5" /></button>
-    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[280px] bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="font-bold text-neutral-950 dark:text-neutral-100">Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label="Close navigation" className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
+    <button type="button" onClick={() => setMobileOpen(true)} aria-label={openNavLabel} aria-expanded={mobileOpen} className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-[#4143D5] text-white shadow-lg lg:hidden rtl:left-auto rtl:right-4"><Menu className="h-5 w-5" /></button>
+    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="font-bold text-neutral-950 dark:text-neutral-100">Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label={closeNavLabel} className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
     <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
       <div className="flex h-[72px] items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
