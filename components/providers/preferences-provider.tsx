@@ -144,6 +144,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     if (theme !== "system") return
     const media = window.matchMedia("(prefers-color-scheme: dark)")
     const sync = () => applyTheme("system")
+    sync()
     media.addEventListener("change", sync)
     return () => media.removeEventListener("change", sync)
   }, [theme])
