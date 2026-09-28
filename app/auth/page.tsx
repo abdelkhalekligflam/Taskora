@@ -103,7 +103,7 @@ export default function AuthPage() {
             </div>
 
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-white/50">
-              Desktop v2.4
+              Private workspace
             </span>
           </div>
 
