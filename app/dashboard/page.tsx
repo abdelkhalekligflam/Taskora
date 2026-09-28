@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CalendarDays, CheckCircle2, Clock3, Command, Plus, Search, Target } from "lucide-react"
 import { usePreferences } from "@/components/providers/preferences-provider"
 import { createClient } from "@/lib/supabase/client"
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [focusMinutes, setFocusMinutes] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function load() {
@@ -45,11 +46,22 @@ export default function DashboardPage() {
       const { data: sessions } = await supabase
         .from("focus_sessions")
         .select("duration_minutes")
-        .gte("completed_at", today.toISOString())
-        .lt("completed_at", tomorrow.toISOString())
+        .gte("started_at", today.toISOString())
+        .lt("started_at", tomorrow.toISOString())
       setFocusMinutes((sessions ?? []).reduce((sum, session) => sum + (session.duration_minutes ?? 0), 0))
     }
     void load()
+  }, [])
+
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+    window.addEventListener("keydown", onShortcut)
+    return () => window.removeEventListener("keydown", onShortcut)
   }, [])
 
   const todayKey = new Date().toDateString()
@@ -82,7 +94,7 @@ export default function DashboardPage() {
     <header className="flex h-[72px] items-center justify-between border-b border-neutral-200 bg-white px-4 sm:px-8 lg:px-10">
       <div className="relative w-full max-w-[420px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"/>
-        <input type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t.search} className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"/>
+        <input ref={searchInputRef} type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t.search} className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"/>
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[10px] text-neutral-400"><Command className="h-3 w-3"/><span>K</span></div>
       </div>
       <div className="ml-3 flex items-center gap-2 sm:ml-6 sm:gap-3">
