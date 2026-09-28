@@ -11,6 +11,8 @@ import {
   CircleHelp,
   LayoutDashboard,
   LogOut,
+  Menu,
+  X,
   TimerReset,
   FileDown,
   Settings,
@@ -41,6 +43,7 @@ export default function Sidebar() {
   const [plan, setPlan] = useState<"free" | "pro">("free")
   const [accountName, setAccountName] = useState("")
   const [accountEmail, setAccountEmail] = useState("")
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     void (async () => {
@@ -64,7 +67,18 @@ export default function Sidebar() {
   const navLabel = (name: string) =>
     ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar, Focus: language === "fr" ? "Focus" : language === "ar" ? "التركيز" : "Focus", Reports: language === "fr" ? "Rapports" : language === "ar" ? "التقارير" : "Reports" } as Record<string, string>)[name] ?? name
 
+  useEffect(() => setMobileOpen(false), [pathname])
+
+  const navItems = navigation.map((item) => {
+    const Icon = item.icon
+    const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
+    return <Link key={item.name} href={item.href} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${active ? "bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100"}`}><Icon className="h-[18px] w-[18px]" /><span>{navLabel(item.name)}</span>{item.pro && <span className="ms-auto rounded bg-[#EEEEFF] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">Pro</span>}</Link>
+  })
+
   return (
+    <>
+    <button type="button" onClick={() => setMobileOpen(true)} aria-label="Open navigation" className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#4143D5] text-white shadow-lg lg:hidden rtl:right-auto rtl:left-5"><Menu className="h-5 w-5" /></button>
+    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[280px] bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="font-bold text-neutral-950 dark:text-neutral-100">Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label="Close navigation" className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
     <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
       <div className="flex h-[72px] items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -90,17 +104,7 @@ export default function Sidebar() {
       <div className="mt-8 px-3">
         <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400">{t.workspace}</p>
         <nav className="space-y-1">
-          {navigation.map((item) => {
-            const Icon = item.icon
-            const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
-
-            return (
-              <Link key={item.name} href={item.href} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${active ? "bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100"}`}>
-                <Icon className="h-[18px] w-[18px]" />
-                <span>{navLabel(item.name)}</span>{item.pro && <span className="ms-auto rounded bg-[#EEEEFF] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">Pro</span>}
-              </Link>
-            )
-          })}
+{navItems}
         </nav>
       </div>
 
@@ -126,5 +130,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }
