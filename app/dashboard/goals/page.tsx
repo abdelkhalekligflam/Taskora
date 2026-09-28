@@ -237,7 +237,12 @@ function GoalModal({ goal, saving, labels, onClose, onSubmit }: { goal: Goal | n
           <div className="flex justify-end gap-2 border-t border-neutral-100 pt-4"><button type="button" onClick={onClose} className="h-9 rounded-lg border border-neutral-200 px-4 text-xs font-semibold">{labels.cancel}</button><button disabled={saving} className="flex h-9 items-center gap-2 rounded-lg bg-[#4143D5] px-4 text-xs font-semibold text-white">{saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} {goal ? labels.save : labels.createGoal}</button></div>
         </form>
       </div>
-      <style jsx global>{`.goal-input{height:40px;width:100%;border-radius:8px;border:1px solid #e5e5e5;background:#fafafa;padding:0 12px;font-size:13px;outline:none}.goal-input:focus{border-color:#4143d5;background:white;box-shadow:0 0 0 2px rgba(65,67,213,.1)}`}</style>
+      <style jsx global>{`
+        .goal-input{height:40px;width:100%;border-radius:8px;border:1px solid #e5e5e5;background:#fafafa;padding:0 12px;font-size:13px;color:#171717!important;-webkit-text-fill-color:#171717;caret-color:#171717;color-scheme:light;outline:none}
+        .goal-input::placeholder{color:#a3a3a3;-webkit-text-fill-color:#a3a3a3;opacity:1}
+        .goal-input option{background:#fff;color:#171717}
+        .goal-input:focus{border-color:#4143d5;background:white;color:#171717!important;-webkit-text-fill-color:#171717;box-shadow:0 0 0 2px rgba(65,67,213,.1)}
+      `}</style>
     </div>
   )
 }
