@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useEffect, useMemo, useState } from "react"
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import {
   Check,
   Clock3,
@@ -47,6 +47,7 @@ export default function DailyPage() {
   const [error, setError] = useState<string | null>(null)
   const [plan, setPlan] = useState<"free" | "pro">("free")
   const [searchQuery, setSearchQuery] = useState("")
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   async function loadTasks() {
     setLoading(true)
@@ -70,6 +71,17 @@ export default function DailyPage() {
   useEffect(() => {
     void loadTasks()
     void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
+  }, [])
+
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+      }
+    }
+    window.addEventListener("keydown", onShortcut)
+    return () => window.removeEventListener("keydown", onShortcut)
   }, [])
 
   async function createTask(event: FormEvent<HTMLFormElement>) {
@@ -229,6 +241,7 @@ export default function DailyPage() {
         })
         if (recurrenceError) {
           setError(recurrenceError.message)
+          await loadTasks()
           return
         }
       }
@@ -278,6 +291,7 @@ export default function DailyPage() {
         <div className="relative w-full max-w-[420px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
