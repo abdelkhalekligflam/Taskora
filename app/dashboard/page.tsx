@@ -14,20 +14,32 @@ type Task = {
   priority: "low" | "medium" | "high"
   scheduled_at: string | null
   duration_minutes: number | null
+  created_at: string
+}
+
+type Goal = {
+  id: string
+  title: string
+  status: "active" | "completed" | "paused" | "archived"
+  current_value: number
+  target_value: number | null
+  unit: string | null
+  target_date: string | null
 }
 
 const supabase = createClient()
 
 const copy = {
-  en: { total:"total", minutes:"min", pending:"pending", notifications:"Notifications", noPriorities:"No pending priorities", noPrioritiesDetail:"Your high-priority pending tasks will appear here.", high:"High", medium:"Medium", low:"Low" },
-  fr: { total:"au total", minutes:"min", pending:"en attente", notifications:"Notifications", noPriorities:"Aucune priorité en attente", noPrioritiesDetail:"Vos tâches prioritaires en attente apparaîtront ici.", high:"Haute", medium:"Moyenne", low:"Basse" },
-  ar: { total:"المجموع", minutes:"دقيقة", pending:"قيد الانتظار", notifications:"الإشعارات", noPriorities:"لا توجد أولويات معلقة", noPrioritiesDetail:"ستظهر هنا مهامك ذات الأولوية التي لم تكتمل بعد.", high:"عالية", medium:"متوسطة", low:"منخفضة" },
+  en: { total:"total", minutes:"min", pending:"pending", notifications:"Notifications", noPriorities:"No pending priorities", noPrioritiesDetail:"Your pending tasks will appear here.", goals:"Goals", noGoals:"No active goals yet.", viewGoals:"View goals", high:"High", medium:"Medium", low:"Low" },
+  fr: { total:"au total", minutes:"min", pending:"en attente", notifications:"Notifications", noPriorities:"Aucune priorité en attente", noPrioritiesDetail:"Vos tâches en attente apparaîtront ici.", goals:"Objectifs", noGoals:"Aucun objectif actif.", viewGoals:"Voir les objectifs", high:"Haute", medium:"Moyenne", low:"Basse" },
+  ar: { total:"المجموع", minutes:"دقيقة", pending:"قيد الانتظار", notifications:"الإشعارات", noPriorities:"لا توجد أولويات معلقة", noPrioritiesDetail:"ستظهر هنا مهامك المعلقة.", goals:"الأهداف", noGoals:"لا توجد أهداف نشطة بعد.", viewGoals:"عرض الأهداف", high:"عالية", medium:"متوسطة", low:"منخفضة" },
 } as const
 
 export default function DashboardPage() {
   const { t, language } = usePreferences()
   const tx = copy[language]
   const [tasks, setTasks] = useState<Task[]>([])
+  const [goals, setGoals] = useState<Goal[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [focusMinutes, setFocusMinutes] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -36,8 +48,15 @@ export default function DashboardPage() {
     async function load() {
       const { data } = await supabase
         .from("tasks")
-        .select("id,title,status,priority,scheduled_at,duration_minutes")
+        .select("id,title,status,priority,scheduled_at,duration_minutes,created_at")
       setTasks((data ?? []) as Task[])
+
+      const { data: goalData } = await supabase
+        .from("goals")
+        .select("id,title,status,current_value,target_value,unit,target_date")
+        .neq("status", "archived")
+        .order("created_at", { ascending: false })
+      setGoals((goalData ?? []) as Goal[])
 
       const today = new Date()
       today.setHours(0, 0, 0, 0)
@@ -65,12 +84,15 @@ export default function DashboardPage() {
   }, [])
 
   const todayKey = new Date().toDateString()
-  const todayTasks = useMemo(() => tasks.filter((task) => task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey), [tasks, todayKey])
+  const todayTasks = useMemo(() => tasks.filter((task) => {
+    if (task.scheduled_at) return new Date(task.scheduled_at).toDateString() === todayKey
+    return new Date(task.created_at).toDateString() === todayKey
+  }), [tasks, todayKey])
   const completed = useMemo(() => todayTasks.filter((task) => task.status === "completed").length, [todayTasks])
   const completion = todayTasks.length ? Math.round((completed / todayTasks.length) * 100) : 0
   const pending = todayTasks.length - completed
   const priorities = useMemo(() => tasks
-    .filter((task) => task.status !== "completed" && task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey)
+    .filter((task) => task.status !== "completed" && (!task.scheduled_at || new Date(task.scheduled_at).toDateString() === todayKey))
     .sort((a, b) => {
       const weight = { high: 3, medium: 2, low: 1 }
       const priorityDiff = weight[b.priority] - weight[a.priority]
@@ -115,6 +137,11 @@ export default function DashboardPage() {
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4"><div><h2 className="text-sm font-semibold text-neutral-950">{t.todaysPriorities}</h2><p className="mt-1 text-xs text-neutral-400">{t.prioritiesIntro}</p></div><Link href="/dashboard/daily" className="text-xs font-semibold text-[#4143D5]">{t.viewDaily}</Link></div>
           {priorities.length ? <div className="mt-5 divide-y divide-neutral-100">{priorities.map((task)=><div key={task.id} className="flex items-center gap-3 py-3"><span className={`h-2 w-2 shrink-0 rounded-full ${task.priority==="high"?"bg-red-500":task.priority==="medium"?"bg-amber-500":"bg-blue-500"}`}/><p className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-800">{task.title}</p><span className="rounded-md bg-neutral-100 px-2 py-1 text-[10px] font-semibold text-neutral-500">{tx[task.priority]}</span>{task.scheduled_at&&<span className="hidden text-xs text-neutral-400 sm:inline">{new Date(task.scheduled_at).toLocaleDateString(locale,{month:"short",day:"numeric"})}</span>}</div>)}</div> : <div className="mt-5 flex min-h-[150px] items-center justify-center rounded-xl border border-dashed border-neutral-200 bg-neutral-50/60 text-center"><div><CheckCircle2 className="mx-auto h-5 w-5 text-neutral-300"/><p className="mt-3 text-sm font-medium text-neutral-600">{tx.noPriorities}</p><p className="mt-1 text-xs text-neutral-400">{tx.noPrioritiesDetail}</p></div></div>}
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-4"><h2 className="text-sm font-semibold text-neutral-950">{tx.goals}</h2><Link href="/dashboard/goals" className="text-xs font-semibold text-[#4143D5]">{tx.viewGoals}</Link></div>
+          {goals.filter((goal)=>goal.status==="active").length ? <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{goals.filter((goal)=>goal.status==="active").slice(0,3).map((goal)=>{const progress=goal.target_value&&goal.target_value>0?Math.min(100,Math.round((goal.current_value/goal.target_value)*100)):0;return <Link href="/dashboard/goals" key={goal.id} className="rounded-xl border border-neutral-100 bg-neutral-50 p-4"><div className="flex items-center justify-between gap-3"><p className="truncate text-sm font-semibold text-neutral-800">{goal.title}</p><span className="text-xs font-semibold text-[#4143D5]">{progress}%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-200"><div className="h-full rounded-full bg-[#4143D5]" style={{width:`${progress}%`}}/></div><p className="mt-2 text-xs text-neutral-400">{goal.current_value}{goal.unit?` ${goal.unit}`:""} / {goal.target_value??"—"}{goal.unit?` ${goal.unit}`:""}</p></Link>})}</div>:<p className="mt-5 text-sm text-neutral-400">{tx.noGoals}</p>}
         </section>
       </div>
     </main>
