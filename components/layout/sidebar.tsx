@@ -8,9 +8,9 @@ import {
   CalendarDays,
   CalendarRange,
   CheckSquare2,
-  ChevronDown,
   CircleHelp,
   LayoutDashboard,
+  LogOut,
   TimerReset,
   FileDown,
   Settings,
@@ -39,15 +39,27 @@ export default function Sidebar() {
   const pathname = usePathname()
   const { t, language } = usePreferences()
   const [plan, setPlan] = useState<"free" | "pro">("free")
+  const [accountName, setAccountName] = useState("")
+  const [accountEmail, setAccountEmail] = useState("")
 
   useEffect(() => {
     void (async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle()
+      setAccountEmail(user.email ?? "")
+      const { data } = await supabase.from("profiles").select("plan,full_name").eq("user_id", user.id).maybeSingle()
       setPlan(data?.plan === "pro" ? "pro" : "free")
+      setAccountName(data?.full_name ?? "")
     })()
   }, [])
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    window.location.href = "/auth"
+  }
+
+  const initials = (accountName || accountEmail || "T").trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "T"
+  const logoutLabel = language === "fr" ? "Déconnexion" : language === "ar" ? "تسجيل الخروج" : "Sign out"
 
   const navLabel = (name: string) =>
     ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar, Focus: language === "fr" ? "Focus" : language === "ar" ? "التركيز" : "Focus", Reports: language === "fr" ? "Rapports" : language === "ar" ? "التقارير" : "Reports" } as Record<string, string>)[name] ?? name
@@ -67,13 +79,12 @@ export default function Sidebar() {
       </div>
 
       <div className="px-4 pt-3">
-        <button type="button" className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-left transition hover:bg-neutral-100 dark:border-neutral-800 dark:bg-[#252830] dark:hover:bg-[#2D3039]">
+        <div className="flex w-full items-center rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-left dark:border-neutral-800 dark:bg-[#252830]">
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.personalWorkspace}</p>
             <p className="mt-0.5 text-[10px] text-neutral-400">{plan === "pro" ? "Pro" : t.freePlan}</p>
           </div>
-          <ChevronDown className="h-4 w-4 shrink-0 text-neutral-400" />
-        </button>
+        </div>
       </div>
 
       <div className="mt-8 px-3">
@@ -103,12 +114,16 @@ export default function Sidebar() {
           {t.help}
         </Link>
         <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">AK</div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">{initials}</div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{t.myAccount}</p>
-            <p className="truncate text-[10px] text-neutral-400">{t.member}</p>
+            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{accountName || t.myAccount}</p>
+            <p className="truncate text-[10px] text-neutral-400">{accountEmail || t.member}</p>
           </div>
         </div>
+        <button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-red-50 hover:text-red-600 dark:text-neutral-400 dark:hover:bg-red-950/30 dark:hover:text-red-300">
+          <LogOut className="h-[18px] w-[18px]" />
+          {logoutLabel}
+        </button>
       </div>
     </aside>
   )
