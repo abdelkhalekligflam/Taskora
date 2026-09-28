@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Check, Crown, Sparkles } from "lucide-react"
 import { usePreferences } from "@/components/providers/preferences-provider"
+import { createClient } from "@/lib/supabase/client"
 
 const copy = {
   en: { eyebrow:"Plans", title:"Choose your Taskora plan", intro:"Start with the core workspace for free. Upgrade when you need more advanced capabilities.", free:"Free", pro:"Pro", current:"Current plan", upgrade:"Upgrade to Pro", coming:"Billing coming soon", freeText:"For personal productivity and everyday planning.", proText:"For users who want more power from their workspace.", included:"Included", freeItems:["Up to 100 active tasks","Up to 3 goals","Daily, weekly and monthly planning","Basic calendar","Basic analytics"], proItems:["Unlimited tasks and goals","Advanced analytics and productivity trends","Focus sessions and history","PDF & CSV exports","Recurring tasks","Advanced reminders","In-app task reminders"], note:"Pro checkout is not enabled yet. You will not be charged from this page.", back:"Back to settings" },
@@ -19,12 +20,23 @@ const prices = {
 } as const
 
 type Currency = keyof typeof prices
+const supabase = createClient()
 
 export default function UpgradePage() {
   const { language } = usePreferences()
   const t = copy[language]
   const [currency, setCurrency] = useState<Currency>("MAD")
+  const [plan, setPlan] = useState<"free" | "pro">("free")
   const price = prices[currency]
+
+  useEffect(() => {
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle()
+      setPlan(data?.plan === "pro" ? "pro" : "free")
+    })()
+  }, [])
   return (
     <main className="min-h-screen bg-[#F9F9FD] px-4 py-10 text-neutral-950 dark:bg-[#15171C] dark:text-neutral-100 sm:px-8">
       <div className="mx-auto max-w-5xl">
@@ -37,11 +49,10 @@ export default function UpgradePage() {
         <div className="mt-7 flex justify-center"><div className="inline-flex rounded-xl border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-[#1C1F26]">{(Object.keys(prices) as Currency[]).map(code => <button key={code} type="button" onClick={() => setCurrency(code)} className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${currency === code ? "bg-[#4143D5] text-white" : "text-neutral-500 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-[#252830]"}`}>{code}</button>)}</div></div>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <Plan title={t.free} description={t.freeText} items={t.freeItems} label={t.included} price={`0 ${currency}`} priceDetail="/ month">
-            <div className="flex h-11 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-sm font-semibold text-neutral-600 dark:border-neutral-700 dark:bg-[#252830] dark:text-neutral-300">{t.current}</div>
+            {plan === "free" ? <div className="flex h-11 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-sm font-semibold text-neutral-600 dark:border-neutral-700 dark:bg-[#252830] dark:text-neutral-300">{t.current}</div> : <div className="h-11" />}
           </Plan>
           <Plan title={t.pro} description={t.proText} items={t.proItems} label={t.included} featured price={`${price.symbol}${price.monthly} ${currency}`} priceDetail={`/ month · ${price.symbol}${price.yearly} ${currency} / year`}>
-            <button disabled className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#4143D5] text-sm font-semibold text-white opacity-80"><Sparkles className="h-4 w-4"/>{t.upgrade}</button>
-            <p className="mt-2 text-center text-[11px] text-neutral-400">{t.coming}</p>
+            {plan === "pro" ? <div className="flex h-11 w-full items-center justify-center rounded-lg bg-[#EEEEFF] text-sm font-semibold text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">{t.current}</div> : <><button disabled className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#4143D5] text-sm font-semibold text-white opacity-80"><Sparkles className="h-4 w-4"/>{t.upgrade}</button><p className="mt-2 text-center text-[11px] text-neutral-400">{t.coming}</p></>}
           </Plan>
         </div>
         <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center text-xs leading-5 text-neutral-500 dark:border-neutral-800 dark:bg-[#1C1F26] dark:text-neutral-400">{t.note}</div>
