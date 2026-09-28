@@ -556,12 +556,26 @@ export default function DailyPage() {
           padding-left: 12px;
           padding-right: 12px;
           font-size: 13px;
-          color: #171717;
+          color: #171717 !important;
+          -webkit-text-fill-color: #171717;
+          caret-color: #171717;
+          color-scheme: light;
           outline: none;
+        }
+        .input-taskora::placeholder {
+          color: #a3a3a3;
+          -webkit-text-fill-color: #a3a3a3;
+          opacity: 1;
+        }
+        .input-taskora option {
+          background: #ffffff;
+          color: #171717;
         }
         .input-taskora:focus {
           border-color: #4143d5;
           background: white;
+          color: #171717 !important;
+          -webkit-text-fill-color: #171717;
           box-shadow: 0 0 0 2px rgba(65, 67, 213, 0.1);
         }
       `}</style>
