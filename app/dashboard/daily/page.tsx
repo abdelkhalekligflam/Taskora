@@ -258,13 +258,18 @@ export default function DailyPage() {
     )
   }, [tasks, searchQuery])
 
+  const todayKey = new Date().toDateString()
+  const todayTasks = useMemo(
+    () => tasks.filter((task) => task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey),
+    [tasks, todayKey]
+  )
   const completed = useMemo(
-    () => tasks.filter((task) => task.status === "completed").length,
-    [tasks]
+    () => todayTasks.filter((task) => task.status === "completed").length,
+    [todayTasks]
   )
 
-  const completion = tasks.length
-    ? Math.round((completed / tasks.length) * 100)
+  const completion = todayTasks.length
+    ? Math.round((completed / todayTasks.length) * 100)
     : 0
 
   return (
@@ -309,7 +314,7 @@ export default function DailyPage() {
                 Today&apos;s Tasks
               </h1>
               <p className="mt-1 text-sm text-neutral-500">
-                {tasks.length} {dynamic.tasks} · {completed} {dynamic.completed} · {completion}% {dynamic.progress}
+                {todayTasks.length} {dynamic.tasks} · {completed} {dynamic.completed} · {completion}% {dynamic.progress}
               </p>
             </div>
 
