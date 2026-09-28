@@ -52,12 +52,13 @@ export default function DashboardPage() {
     void load()
   }, [])
 
-  const completed = useMemo(() => tasks.filter((task) => task.status === "completed").length, [tasks])
-  const minutes = useMemo(() => tasks.reduce((sum, task) => sum + (task.duration_minutes ?? 0), 0), [tasks])
-  const completion = tasks.length ? Math.round((completed / tasks.length) * 100) : 0
-  const pending = tasks.length - completed
+  const todayKey = new Date().toDateString()
+  const todayTasks = useMemo(() => tasks.filter((task) => task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey), [tasks, todayKey])
+  const completed = useMemo(() => todayTasks.filter((task) => task.status === "completed").length, [todayTasks])
+  const completion = todayTasks.length ? Math.round((completed / todayTasks.length) * 100) : 0
+  const pending = todayTasks.length - completed
   const priorities = useMemo(() => tasks
-    .filter((task) => task.status !== "completed")
+    .filter((task) => task.status !== "completed" && task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey)
     .sort((a, b) => {
       const weight = { high: 3, medium: 2, low: 1 }
       const priorityDiff = weight[b.priority] - weight[a.priority]
@@ -67,10 +68,10 @@ export default function DashboardPage() {
       return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
     })
     .filter((task) => !searchQuery.trim() || task.title.toLowerCase().includes(searchQuery.trim().toLowerCase()))
-    .slice(0, 5), [tasks, searchQuery])
+    .slice(0, 5), [tasks, searchQuery, todayKey])
 
   const stats = [
-    { label: t.tasksCompleted, value: String(completed), detail: `${tasks.length} ${tx.total}`, icon: CheckCircle2 },
+    { label: t.tasksCompleted, value: String(completed), detail: `${todayTasks.length} ${tx.total}`, icon: CheckCircle2 },
     { label: t.focusTime, value: `${Math.round((focusMinutes / 60) * 10) / 10}h`, detail: `${focusMinutes} ${tx.minutes}`, icon: Clock3 },
     { label: t.dailyProgress, value: `${completion}%`, detail: `${pending} ${tx.pending}`, icon: Target },
   ]
