@@ -22,7 +22,7 @@ const defaults: Profile = {
   timezone: "Africa/Casablanca",
   theme: "system",
   notifications_enabled: true,
-  email_notifications: true,
+  email_notifications: false,
   plan: "free",
 }
 
@@ -99,7 +99,13 @@ export default function SettingsPage() {
       return
     }
 
-    const { error } = await supabase.from("profiles").update(profile).eq("user_id", user.id)
+    const { error } = await supabase.from("profiles").update({
+      full_name: profile.full_name,
+      language: profile.language,
+      timezone: profile.timezone,
+      theme: profile.theme,
+      notifications_enabled: profile.notifications_enabled,
+    }).eq("user_id", user.id)
     if (error) setError(error.message)
     else {
       setSaved(true)
