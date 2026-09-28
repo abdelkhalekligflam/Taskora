@@ -64,11 +64,15 @@ export default function GoalsPage() {
       current_value: Number(form.get("current_value") || 0),
       unit: String(form.get("unit") ?? "").trim() || null,
       target_date: String(form.get("target_date") ?? "") || null,
-      status: String(form.get("status") ?? "active"),
+      status: String(form.get("status") ?? "active") as Goal["status"],
     }
 
+    const completedAt = payload.status === "completed"
+      ? goal?.completed_at ?? new Date().toISOString()
+      : null
+
     if (goal) {
-      const { error } = await supabase.from("goals").update(payload).eq("id", goal.id)
+      const { error } = await supabase.from("goals").update({ ...payload, completed_at: completedAt }).eq("id", goal.id)
       if (error) {
         setError(error.message)
         setSaving(false)
@@ -86,7 +90,7 @@ export default function GoalsPage() {
         setSaving(false)
         return
       }
-      const { error } = await supabase.from("goals").insert({ ...payload, user_id: user.id })
+      const { error } = await supabase.from("goals").insert({ ...payload, completed_at: completedAt, user_id: user.id })
       if (error) {
         setError(error.message)
         setSaving(false)
