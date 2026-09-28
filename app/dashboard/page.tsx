@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const tx = copy[language]
   const [tasks, setTasks] = useState<Task[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [focusMinutes, setFocusMinutes] = useState(0)
 
   useEffect(() => {
     async function load() {
@@ -36,6 +37,17 @@ export default function DashboardPage() {
         .from("tasks")
         .select("id,title,status,priority,scheduled_at,duration_minutes")
       setTasks((data ?? []) as Task[])
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const { data: sessions } = await supabase
+        .from("focus_sessions")
+        .select("duration_minutes")
+        .gte("completed_at", today.toISOString())
+        .lt("completed_at", tomorrow.toISOString())
+      setFocusMinutes((sessions ?? []).reduce((sum, session) => sum + (session.duration_minutes ?? 0), 0))
     }
     void load()
   }, [])
@@ -59,7 +71,7 @@ export default function DashboardPage() {
 
   const stats = [
     { label: t.tasksCompleted, value: String(completed), detail: `${tasks.length} ${tx.total}`, icon: CheckCircle2 },
-    { label: t.focusTime, value: `${Math.round((minutes / 60) * 10) / 10}h`, detail: `${minutes} ${tx.minutes}`, icon: Clock3 },
+    { label: t.focusTime, value: `${Math.round((focusMinutes / 60) * 10) / 10}h`, detail: `${focusMinutes} ${tx.minutes}`, icon: Clock3 },
     { label: t.dailyProgress, value: `${completion}%`, detail: `${pending} ${tx.pending}`, icon: Target },
   ]
 
