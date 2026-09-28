@@ -42,14 +42,26 @@ export default function ReportsPage() {
     const keys = Object.keys(rows[0])
     const esc = (value: unknown) => `"${String(value ?? "").replaceAll('"','""')}"`
     const csv = [keys.join(","), ...rows.map((row) => keys.map((key) => esc(row[key])).join(","))].join("\n")
-    downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), `taskora-${table}.csv`)
+    downloadBlob(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }), `taskora-${table}.csv`)
   }
 
   async function exportPdf() {
-    const [{ data: tasks }, { data: goals }] = await Promise.all([
+    const reportWindow = window.open("", "_blank")
+    if (!reportWindow) return
+    reportWindow.opener = null
+    reportWindow.document.write(`<!doctype html><html><body style="font-family:Arial,sans-serif;padding:32px;color:#737373">Generating report...</body></html>`)
+
+    const [{ data: tasks, error: tasksError }, { data: goals, error: goalsError }] = await Promise.all([
       supabase.from("tasks").select("title,status,priority,scheduled_at,duration_minutes").order("created_at", { ascending: false }),
       supabase.from("goals").select("title,status,current_value,target_value,unit,target_date").order("created_at", { ascending: false }),
     ])
+
+    if (tasksError || goalsError) {
+      reportWindow.document.open()
+      reportWindow.document.write(`<!doctype html><html><body style="font-family:Arial,sans-serif;padding:32px;color:#b91c1c">Unable to generate report.</body></html>`)
+      reportWindow.document.close()
+      return
+    }
 
     const taskRows = tasks ?? []
     const goalRows = goals ?? []
@@ -68,8 +80,6 @@ export default function ReportsPage() {
     <h2>${t.goals}</h2><table><thead><tr><th>${t.colTitle}</th><th>${t.colStatus}</th><th>${t.colProgress}</th><th>${t.colTarget}</th></tr></thead><tbody>${goalHtml}</tbody></table>
     <div class="footer">Taskora · ${escapeHtml(new Date().getFullYear())}</div><script>window.onload=()=>window.print()</script></body></html>`
 
-    const reportWindow = window.open("", "_blank", "noopener,noreferrer")
-    if (!reportWindow) return
     reportWindow.document.open()
     reportWindow.document.write(html)
     reportWindow.document.close()
