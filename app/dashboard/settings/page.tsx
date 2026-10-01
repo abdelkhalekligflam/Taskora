@@ -48,6 +48,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [removingAvatar, setRemovingAvatar] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
@@ -116,6 +117,26 @@ export default function SettingsPage() {
       window.dispatchEvent(new Event("taskora-preferences-updated"))
     }
     setUploadingAvatar(false)
+  }
+
+  async function removeAvatar() {
+    setRemovingAvatar(true)
+    setError(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setError("Your session could not be verified."); setRemovingAvatar(false); return }
+    const { data: files } = await supabase.storage.from("avatars").list(user.id)
+    if (files?.length) {
+      const paths = files.map((file) => user.id + "/" + file.name)
+      const { error: storageError } = await supabase.storage.from("avatars").remove(paths)
+      if (storageError) { setError(storageError.message); setRemovingAvatar(false); return }
+    }
+    const { error: profileError } = await supabase.from("profiles").update({ avatar_url: null }).eq("user_id", user.id)
+    if (profileError) setError(profileError.message)
+    else {
+      setProfile((current) => ({ ...current, avatar_url: null }))
+      window.dispatchEvent(new Event("taskora-preferences-updated"))
+    }
+    setRemovingAvatar(false)
   }
 
   async function signOut() {
@@ -194,11 +215,14 @@ export default function SettingsPage() {
               </div>
               <div className="min-w-0"><p className="truncate text-sm font-semibold text-neutral-900">{profile.full_name || "Taskora User"}</p><p className="truncate text-xs text-neutral-400">{email}</p></div>
             </div>
-            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50">
-              {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-              {uploadingAvatar ? "Uploading..." : "Change profile photo"}
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploadingAvatar} onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadAvatar(file); e.currentTarget.value = "" }} />
-            </label>
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50">
+                {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                {uploadingAvatar ? "Uploading..." : "Change profile photo"}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploadingAvatar || removingAvatar} onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadAvatar(file); e.currentTarget.value = "" }} />
+              </label>
+              {profile.avatar_url && <button type="button" disabled={uploadingAvatar || removingAvatar} onClick={() => void removeAvatar()} className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60">{removingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}{removingAvatar ? "Removing..." : "Remove photo"}</button>}
+            </div>
             <p className="text-[10px] text-neutral-400">JPG, PNG or WebP. Maximum 2 MB.</p>
             <Field label="Full name"><input value={profile.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} className="settings-input" placeholder="Your name" /></Field>
             <Field label="Email"><input value={email} disabled className="settings-input opacity-60" /></Field>
