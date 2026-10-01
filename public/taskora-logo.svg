@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="top" x1="92" y1="126" x2="420" y2="244" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#C4B5FD"/><stop offset=".48" stop-color="#8B7CFF"/><stop offset="1" stop-color="#4F5BFF"/>
+  </linearGradient>
+  <linearGradient id="stem" x1="202" y1="204" x2="320" y2="421" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#4338CA"/><stop offset=".46" stop-color="#654BFF"/><stop offset="1" stop-color="#B69CFF"/>
+  </linearGradient>
+  <linearGradient id="fold" x1="192" y1="205" x2="322" y2="276" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#8B5CF6"/><stop offset="1" stop-color="#312E81"/>
+  </linearGradient>
+  <filter id="shadow" x="55" y="88" width="402" height="374" filterUnits="userSpaceOnUse">
+    <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#4F46E5" flood-opacity=".3"/>
+  </filter>
+</defs>
+<g filter="url(#shadow)">
+  <path d="M101 126C85 126 72 139 72 155V191C72 207 85 220 101 220H411C427 220 440 207 440 191V155C440 139 427 126 411 126H101Z" fill="url(#top)"/>
+  <path d="M201 220H311V370C311 407 287 430 256 430C225 430 201 407 201 370V220Z" fill="url(#stem)"/>
+  <path d="M201 220H311L201 315V220Z" fill="url(#fold)" opacity=".92"/>
+  <path d="M101 126H411C427 126 440 139 440 155V166C352 161 264 169 178 190C141 199 105 208 72 216V155C72 139 85 126 101 126Z" fill="white" opacity=".08"/>
+</g>
+</svg>
