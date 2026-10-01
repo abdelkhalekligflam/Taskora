@@ -43,7 +43,11 @@ export default function NotificationBell() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    // Initial remote notification synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load()
+  }, [load])
 
   useEffect(() => {
     const timer = window.setInterval(() => void load(), 60_000)

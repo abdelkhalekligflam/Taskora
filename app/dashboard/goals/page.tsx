@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useMemo, useState } from "react"
-import { Check, Loader2, Pencil, Plus, Target, Trash2, X } from "lucide-react"
+import { Loader2, Pencil, Plus, Target, Trash2, X } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import { usePreferences } from "@/components/providers/preferences-provider"
@@ -47,6 +47,8 @@ export default function GoalsPage() {
   }
 
   useEffect(() => {
+    // Initial remote data synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadGoals()
     void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
   }, [])

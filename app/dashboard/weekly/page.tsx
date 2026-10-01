@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Loader2 } from "lucide-react"
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { usePreferences } from "@/components/providers/preferences-provider"
 
