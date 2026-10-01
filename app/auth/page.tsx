@@ -1,10 +1,13 @@
 "use client"
 
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function AuthPage() {
+  const router = useRouter()
   const [mode, setMode] = useState<"signin" | "signup">("signin")
   const [showPassword, setShowPassword] = useState(false)
 
@@ -37,7 +40,8 @@ export default function AuthPage() {
         return
       }
 
-      window.location.href = "/dashboard"
+      router.replace("/dashboard")
+      router.refresh()
       return
     }
 
@@ -92,10 +96,10 @@ export default function AuthPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(99,102,241,.22),transparent_34%),radial-gradient(circle_at_80%_75%,rgba(99,102,241,.12),transparent_30%)]" />
           <div className="absolute inset-0 opacity-[.08] [background-image:linear-gradient(rgba(255,255,255,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.18)_1px,transparent_1px)] [background-size:48px_48px]" />
           <div className="relative z-10 flex w-full flex-col">
-            <a href="/" className="inline-flex w-fit items-center gap-3">
+            <Link href="/" className="inline-flex w-fit items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[.07] shadow-2xl"><Sparkles className="h-4 w-4 text-[#a5a6ff]" /></span>
               <span className="text-lg font-semibold tracking-[-.03em]">Taskora</span>
-            </a>
+            </Link>
 
             <div className="my-auto max-w-xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[.05] px-3 py-1.5 text-[11px] font-medium text-white/60">
@@ -119,7 +123,7 @@ export default function AuthPage() {
         </section>
 
         <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-          <div className="absolute left-5 top-5 lg:hidden"><a href="/" className="flex items-center gap-2 font-semibold"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4143D5] text-white"><Sparkles className="h-3.5 w-3.5"/></span>Taskora</a></div>
+          <div className="absolute left-5 top-5 lg:hidden"><Link href="/" className="flex items-center gap-2 font-semibold"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4143D5] text-white"><Sparkles className="h-3.5 w-3.5"/></span>Taskora</Link></div>
           <div className="w-full max-w-[420px]">
             <div className="mb-8">
               <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white shadow-sm"><LockKeyhole className="h-[18px] w-[18px] text-[#4143D5]"/></div>
