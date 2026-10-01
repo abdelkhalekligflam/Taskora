@@ -45,17 +45,23 @@ export default function Sidebar() {
   const [plan, setPlan] = useState<"free" | "pro">("free")
   const [accountName, setAccountName] = useState("")
   const [accountEmail, setAccountEmail] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    void (async () => {
+    const loadAccount = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setAccountEmail(user.email ?? "")
-      const { data } = await supabase.from("profiles").select("plan,full_name").eq("user_id", user.id).maybeSingle()
+      const { data } = await supabase.from("profiles").select("plan,full_name,avatar_url").eq("user_id", user.id).maybeSingle()
       setPlan(data?.plan === "pro" ? "pro" : "free")
       setAccountName(data?.full_name ?? "")
-    })()
+      setAvatarUrl(data?.avatar_url ?? null)
+    }
+    void loadAccount()
+    const reload = () => void loadAccount()
+    window.addEventListener("taskora-preferences-updated", reload)
+    return () => window.removeEventListener("taskora-preferences-updated", reload)
   }, [])
 
   async function signOut() {
@@ -132,7 +138,7 @@ export default function Sidebar() {
           {t.help}
         </Link>
         <div className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">{initials}</div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#E9E9FF] text-xs font-bold text-[#4143D5]">{avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initials}</div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">{accountName || t.myAccount}</p>
             <p className="truncate text-[10px] text-neutral-400">{accountEmail || t.member}</p>
