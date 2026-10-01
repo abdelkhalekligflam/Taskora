@@ -615,7 +615,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Priority({ priority, label: _label }: { priority: Task["priority"]; label: string }) {
+function Priority({ priority }: { priority: Task["priority"]; label: string }) {
   const classes = {
     low: "bg-blue-50 text-blue-700",
     medium: "bg-amber-50 text-amber-700",
