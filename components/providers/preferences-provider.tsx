@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 
 export type AppLanguage = "en" | "fr" | "ar"
-type Theme = "light" | "dark" | "system"
+export type Theme = "light" | "dark" | "system"
 
 const dictionaries = {
   en: {
@@ -39,7 +39,7 @@ const dictionaries = {
 } as const
 
 type Dictionary = typeof dictionaries.en
-type ContextValue = { language: AppLanguage; theme: Theme; t: Dictionary }
+type ContextValue = { language: AppLanguage; theme: Theme; t: Dictionary; setTheme: (theme: Theme) => Promise<void> }
 
 const uiTranslations: Record<string, { fr: string; ar: string }> = {
   "Daily Tasks · Live from Supabase": { fr: "Tâches quotidiennes · Données Supabase", ar: "المهام اليومية · بيانات Supabase" },
@@ -71,7 +71,7 @@ const originalText = new WeakMap<Text, string>()
 const translatedText = new WeakSet<Text>()
 const originalPlaceholder = new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>()
 
-const PreferencesContext = createContext<ContextValue>({ language:"en", theme:"system", t:dictionaries.en })
+const PreferencesContext = createContext<ContextValue>({ language:"en", theme:"system", t:dictionaries.en, setTheme: async () => {} })
 
 function applyTheme(theme: Theme) {
   const dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
@@ -159,7 +159,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     return () => media.removeEventListener("change", sync)
   }, [theme])
 
-  const value = useMemo(() => ({ language, theme, t: dictionaries[language] as Dictionary }), [language, theme])
+  async function updateTheme(nextTheme: Theme) {
+    setTheme(nextTheme)
+    applyTheme(nextTheme)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await supabase.from("profiles").update({ theme: nextTheme }).eq("user_id", user.id)
+  }
+
+  const value = useMemo(() => ({ language, theme, t: dictionaries[language] as Dictionary, setTheme: updateTheme }), [language, theme])
   return <PreferencesContext.Provider value={value}><GlobalTranslator language={language} />{children}</PreferencesContext.Provider>
 }
 
