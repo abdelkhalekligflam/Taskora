@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import {
   BarChart3,
@@ -41,6 +41,7 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { t, language, theme, setTheme } = usePreferences()
   const [plan, setPlan] = useState<"free" | "pro">("free")
   const [accountName, setAccountName] = useState("")
@@ -60,7 +61,8 @@ export default function Sidebar() {
 
   async function signOut() {
     await supabase.auth.signOut()
-    window.location.href = "/auth"
+    router.replace("/auth")
+    router.refresh()
   }
 
   const initials = (accountName || accountEmail || "T").trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "T"
@@ -71,7 +73,6 @@ export default function Sidebar() {
   const navLabel = (name: string) =>
     ({ Overview: t.overview, Daily: t.daily, Weekly: t.weekly, Monthly: t.monthly, Analytics: t.analytics, Goals: t.goals, Calendar: t.calendar, Focus: language === "fr" ? "Focus" : language === "ar" ? "التركيز" : "Focus", Reports: language === "fr" ? "Rapports" : language === "ar" ? "التقارير" : "Reports" } as Record<string, string>)[name] ?? name
 
-  useEffect(() => setMobileOpen(false), [pathname])
   useEffect(() => {
     if (!mobileOpen) return
     const onKeyDown = (event: KeyboardEvent) => {
@@ -91,7 +92,7 @@ export default function Sidebar() {
   const navItems = navigation.map((item) => {
     const Icon = item.icon
     const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
-    return <Link key={item.name} href={item.href} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${active ? "bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100"}`}><Icon className="h-[18px] w-[18px]" /><span>{navLabel(item.name)}</span>{item.pro && <span className="ms-auto rounded bg-[#EEEEFF] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">Pro</span>}</Link>
+    return <Link key={item.name} href={item.href} onClick={() => setMobileOpen(false)} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition ${active ? "bg-[#EEEEFF] text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]" : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100"}`}><Icon className="h-[18px] w-[18px]" /><span>{navLabel(item.name)}</span>{item.pro && <span className="ms-auto rounded bg-[#EEEEFF] px-1.5 py-0.5 text-[8px] font-bold uppercase text-[#4143D5] dark:bg-[#30314F] dark:text-[#AEB0FF]">Pro</span>}</Link>
   })
 
   return (
