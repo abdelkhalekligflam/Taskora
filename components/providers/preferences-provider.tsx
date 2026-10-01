@@ -162,6 +162,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   async function updateTheme(nextTheme: Theme) {
     setTheme(nextTheme)
     applyTheme(nextTheme)
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) await supabase.from("profiles").update({ theme: nextTheme }).eq("user_id", user.id)
   }
