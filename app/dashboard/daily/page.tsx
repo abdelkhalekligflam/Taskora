@@ -161,7 +161,7 @@ export default function DailyPage() {
     setSaving(true)
     setError(null)
 
-    const { error: updateError } = await supabase
+    const { data: updatedTask, error: updateError } = await supabase
       .from("tasks")
       .update({
         title,
@@ -174,16 +174,18 @@ export default function DailyPage() {
         reminder_minutes: plan === "pro" && reminder ? Number(reminder) : null,
       })
       .eq("id", editingTask.id)
+      .select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at,recurrence,reminder_minutes")
+      .single()
 
-    if (updateError) {
-      setError(updateError.message)
+    if (updateError || !updatedTask) {
+      setError(updateError?.message ?? "Could not update task.")
       setSaving(false)
       return
     }
 
+    setTasks((current) => current.map((task) => task.id === editingTask.id ? updatedTask as Task : task))
     setEditingTask(null)
     setSaving(false)
-    await loadTasks()
   }
 
   async function deleteTask() {
@@ -275,7 +277,10 @@ export default function DailyPage() {
 
   const todayKey = new Date().toDateString()
   const todayTasks = useMemo(
-    () => tasks.filter((task) => task.scheduled_at && new Date(task.scheduled_at).toDateString() === todayKey),
+    () => tasks.filter((task) => task.scheduled_at
+      ? new Date(task.scheduled_at).toDateString() === todayKey
+      : new Date(task.created_at).toDateString() === todayKey
+    ),
     [tasks, todayKey]
   )
   const completed = useMemo(
@@ -394,6 +399,12 @@ export default function DailyPage() {
                   <Plus className="h-4 w-4" />
                   Create first task
                 </button>
+              </div>
+            ) : filteredTasks.length === 0 ? (
+              <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
+                <Search className="h-5 w-5 text-neutral-300" />
+                <h3 className="mt-3 text-sm font-semibold text-neutral-900">No matching tasks</h3>
+                <p className="mt-1 text-xs text-neutral-400">Try another search term.</p>
               </div>
             ) : (
               <div className="mt-4 space-y-2">
