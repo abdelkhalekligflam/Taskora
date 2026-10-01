@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Bell, Camera, Check, Globe2, Loader2, LogOut, Palette, Save, ShieldCheck, Sparkles, Trash2, UserRound } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Profile = {
   full_name: string | null
@@ -39,6 +40,7 @@ function applyTheme(theme: Profile["theme"]) {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { setTheme } = usePreferences()
   const [profile, setProfile] = useState<Profile>(defaults)
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(true)
@@ -212,7 +214,7 @@ export default function SettingsPage() {
           <Card icon={<Palette />} title="Appearance" description="Choose how Taskora should look.">
             <div className="grid grid-cols-3 gap-2">
               {(["light", "dark", "system"] as const).map((theme) => (
-                <button key={theme} type="button" onClick={() => setProfile({ ...profile, theme })} className={`rounded-xl border p-4 text-left transition ${profile.theme === theme ? "border-[#4143D5] bg-[#EEEEFF]" : "border-neutral-200 bg-neutral-50"}`}>
+                <button key={theme} type="button" onClick={() => { setProfile({ ...profile, theme }); void setTheme(theme) }} className={`rounded-xl border p-4 text-left transition ${profile.theme === theme ? "border-[#4143D5] bg-[#EEEEFF]" : "border-neutral-200 bg-neutral-50"}`}>
                   <div className={`h-10 rounded-lg border ${theme === "dark" ? "border-neutral-700 bg-neutral-900" : theme === "system" ? "bg-gradient-to-r from-white to-neutral-900" : "bg-white"}`} />
                   <p className="mt-2 text-xs font-semibold capitalize text-neutral-700">{theme}</p>
                 </button>
