@@ -68,6 +68,7 @@ const uiTranslations: Record<string, { fr: string; ar: string }> = {
 }
 
 const originalText = new WeakMap<Text, string>()
+const translatedText = new WeakSet<Text>()
 const originalPlaceholder = new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>()
 
 const PreferencesContext = createContext<ContextValue>({ language:"en", theme:"system", t:dictionaries.en })
@@ -88,11 +89,20 @@ function GlobalTranslator({ language }: { language: AppLanguage }) {
           const current = node.nodeValue ?? ""
           if (!originalText.has(node)) originalText.set(node, current)
           const source = (originalText.get(node) ?? current).trim()
-          const translated = language === "en" ? source : uiTranslations[source]?.[language]
-          if (translated) {
-            const leading = (originalText.get(node) ?? "").match(/^\\s*/)?.[0] ?? ""
-            const trailing = (originalText.get(node) ?? "").match(/\\s*$/)?.[0] ?? ""
-            node.nodeValue = leading + translated + trailing
+          const original = originalText.get(node) ?? current
+          if (language === "en") {
+            if (translatedText.has(node)) {
+              node.nodeValue = original
+              translatedText.delete(node)
+            }
+          } else {
+            const translated = uiTranslations[source]?.[language]
+            if (translated) {
+              const leading = original.match(/^\\s*/)?.[0] ?? ""
+              const trailing = original.match(/\\s*$/)?.[0] ?? ""
+              node.nodeValue = leading + translated + trailing
+              translatedText.add(node)
+            }
           }
         }
         node = walker.nextNode() as Text | null
