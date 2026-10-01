@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { CalendarDays, CheckCircle2, Clock3, Command, Plus, Search, Target } from "lucide-react"
+import { CalendarDays, CheckCircle2, Clock3, Command, Moon, Plus, Search, Sun, Target } from "lucide-react"
 import { usePreferences } from "@/components/providers/preferences-provider"
 import { createClient } from "@/lib/supabase/client"
 import NotificationBell from "@/components/notifications/notification-bell"
@@ -37,7 +37,7 @@ const copy = {
 } as const
 
 export default function DashboardPage() {
-  const { t, language } = usePreferences()
+  const { t, language, theme, setTheme } = usePreferences()
   const tx = copy[language]
   const [tasks, setTasks] = useState<Task[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
@@ -117,13 +117,14 @@ export default function DashboardPage() {
   const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
 
   return <div className="min-h-screen bg-[#F9F9FD]">
-    <header className="flex h-[72px] items-center justify-between border-b border-neutral-200 bg-white px-4 sm:px-8 lg:px-10">
+    <header className="flex h-[72px] items-center justify-between border-b border-neutral-200 bg-white px-4 transition-colors dark:border-neutral-800 dark:bg-[#16181D] sm:px-8 lg:px-10">
       <div className="relative w-full max-w-[420px]">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"/>
-        <input ref={searchInputRef} type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t.search} className="h-10 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none focus:border-[#4143D5] focus:bg-white focus:ring-2 focus:ring-[#4143D5]/10"/>
+        <input ref={searchInputRef} type="text" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t.search} className="h-10 w-full rounded-xl border border-neutral-200 bg-neutral-50 pl-10 pr-16 text-sm text-neutral-900 outline-none transition focus:border-[#4143D5] focus:bg-white focus:ring-4 focus:ring-[#4143D5]/10 dark:border-neutral-700 dark:bg-[#1C1F26] dark:text-neutral-100 dark:focus:bg-[#20232A]"/>
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[10px] text-neutral-400"><Command className="h-3 w-3"/><span>K</span></div>
       </div>
       <div className="ml-3 flex items-center gap-2 sm:ml-6 sm:gap-3">
+        <button type="button" onClick={() => void setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"} className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-500 shadow-sm transition hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-950 dark:border-neutral-700 dark:bg-[#1C1F26] dark:text-neutral-300 dark:hover:bg-[#252830] dark:hover:text-white">{theme === "dark" ? <Sun className="h-[17px] w-[17px]"/> : <Moon className="h-[17px] w-[17px]"/>}</button>
         <div className="hidden sm:block"><NotificationBell /></div>
         <Link href="/dashboard/daily" className="flex h-10 items-center gap-2 rounded-lg bg-[#4143D5] px-3 text-sm font-semibold text-white sm:px-4"><Plus className="h-4 w-4"/><span className="hidden sm:inline">{t.newTask}</span></Link>
       </div>
