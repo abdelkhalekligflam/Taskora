@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react"
 import Link from "next/link"
-import { Bell, Check, Globe2, Loader2, Palette, Save, Sparkles, UserRound } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Bell, Camera, Check, Globe2, Loader2, LogOut, Palette, Save, ShieldCheck, Sparkles, Trash2, UserRound } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 
@@ -14,6 +15,7 @@ type Profile = {
   notifications_enabled: boolean
   email_notifications: boolean
   plan: "free" | "pro"
+  avatar_url: string | null
 }
 
 const defaults: Profile = {
@@ -24,6 +26,7 @@ const defaults: Profile = {
   notifications_enabled: true,
   email_notifications: false,
   plan: "free",
+  avatar_url: null,
 }
 
 const supabase = createClient()
@@ -35,12 +38,15 @@ function applyTheme(theme: Profile["theme"]) {
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<Profile>(defaults)
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -85,6 +91,48 @@ export default function SettingsPage() {
     media.addEventListener("change", sync)
     return () => media.removeEventListener("change", sync)
   }, [profile.theme])
+
+  async function uploadAvatar(file: File) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      setError("Use a JPG, PNG or WebP image under 2 MB.")
+      return
+    }
+    setUploadingAvatar(true)
+    setError(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setError("Your session could not be verified."); setUploadingAvatar(false); return }
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
+    const path = user.id + "/profile." + extension
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type })
+    if (uploadError) { setError(uploadError.message); setUploadingAvatar(false); return }
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path)
+    const avatarUrl = data.publicUrl + "?v=" + Date.now()
+    const { error: profileError } = await supabase.from("profiles").update({ avatar_url: avatarUrl }).eq("user_id", user.id)
+    if (profileError) setError(profileError.message)
+    else {
+      setProfile((current) => ({ ...current, avatar_url: avatarUrl }))
+      window.dispatchEvent(new Event("taskora-preferences-updated"))
+    }
+    setUploadingAvatar(false)
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    router.replace("/auth")
+    router.refresh()
+  }
+
+  async function deleteAccount() {
+    const confirmed = window.confirm("Delete your Taskora account permanently? This removes your tasks, goals, focus sessions, profile and account. This action cannot be undone.")
+    if (!confirmed) return
+    setDeletingAccount(true)
+    setError(null)
+    const { error } = await supabase.rpc("delete_my_account")
+    if (error) { setError(error.message); setDeletingAccount(false); return }
+    await supabase.auth.signOut()
+    router.replace("/")
+    router.refresh()
+  }
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -139,11 +187,17 @@ export default function SettingsPage() {
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           <Card icon={<UserRound />} title="Profile" description="Your personal Taskora identity.">
             <div className="flex items-center gap-4 rounded-xl bg-neutral-50 p-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EEEEFF] text-lg font-bold text-[#4143D5]">
-                {(profile.full_name || email || "T").slice(0, 2).toUpperCase()}
+              <div className="h-14 w-14 shrink-0 rounded-2xl bg-[#EEEEFF] bg-cover bg-center text-lg font-bold text-[#4143D5]" style={profile.avatar_url ? { backgroundImage: `url("${profile.avatar_url}")` } : undefined}>
+                {!profile.avatar_url && <span className="flex h-full w-full items-center justify-center">{(profile.full_name || email || "T").slice(0, 2).toUpperCase()}</span>}
               </div>
               <div className="min-w-0"><p className="truncate text-sm font-semibold text-neutral-900">{profile.full_name || "Taskora User"}</p><p className="truncate text-xs text-neutral-400">{email}</p></div>
             </div>
+            <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50">
+              {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              {uploadingAvatar ? "Uploading..." : "Change profile photo"}
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploadingAvatar} onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadAvatar(file); e.currentTarget.value = "" }} />
+            </label>
+            <p className="text-[10px] text-neutral-400">JPG, PNG or WebP. Maximum 2 MB.</p>
             <Field label="Full name"><input value={profile.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} className="settings-input" placeholder="Your name" /></Field>
             <Field label="Email"><input value={email} disabled className="settings-input opacity-60" /></Field>
           </Card>
@@ -189,10 +243,20 @@ export default function SettingsPage() {
             <Toggle label="Email notifications" detail="Email delivery is not enabled yet." checked={false} onChange={() => undefined} disabled />
           </Card>
 
+          <Card icon={<ShieldCheck />} title="Account & Security" description="Manage access to your Taskora account.">
+            <button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 transition hover:bg-neutral-50"><LogOut className="h-4 w-4" />Log out</button>
+            <p className="text-[11px] leading-5 text-neutral-400">Signing out keeps your data safe and available the next time you sign in.</p>
+          </Card>
+
           <Card icon={<Sparkles />} title="Subscription" description="Your current Taskora access level.">
             <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-4"><div><p className="text-sm font-semibold text-neutral-900 capitalize">{profile.plan} plan</p><p className="mt-1 text-xs text-neutral-400">{profile.plan === "free" ? "Core Taskora workspace features." : "All Taskora Pro capabilities."}</p></div><span className="rounded-full bg-[#EEEEFF] px-3 py-1 text-[10px] font-bold uppercase text-[#4143D5]">{profile.plan}</span></div>
             <p className="text-[11px] leading-5 text-neutral-400">Billing is not enabled yet, so this page never charges or changes your plan.</p>
           </Card>
+
+          <section className="lg:col-span-2 rounded-2xl border border-red-200 bg-red-50/60 p-6">
+            <div className="flex items-start gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600"><Trash2 className="h-4 w-4" /></div><div><h2 className="text-base font-semibold text-red-700">Danger zone</h2><p className="mt-0.5 text-xs text-red-500">Permanent account actions.</p></div></div>
+            <div className="mt-5 flex flex-col justify-between gap-4 rounded-xl border border-red-200 bg-white p-4 sm:flex-row sm:items-center"><div><p className="text-sm font-semibold text-neutral-900">Delete account</p><p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">Permanently delete your Taskora account and all associated tasks, goals, focus sessions and profile data. This cannot be undone.</p></div><button type="button" disabled={deletingAccount} onClick={() => void deleteAccount()} className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60">{deletingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}{deletingAccount ? "Deleting..." : "Delete account"}</button></div>
+          </section>
         </div>
       </div>
       <style jsx global>{`

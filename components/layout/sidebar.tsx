@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -92,11 +94,11 @@ export default function Sidebar() {
   return (
     <>
     <button type="button" onClick={() => setMobileOpen(true)} aria-label={openNavLabel} aria-expanded={mobileOpen} className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-[#4143D5] text-white shadow-lg lg:hidden rtl:left-auto rtl:right-4"><Menu className="h-5 w-5" /></button>
-    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="flex items-center gap-2 font-bold text-neutral-950 dark:text-neutral-100"><img src="/taskora-logo.svg" alt="" className="h-8 w-8 object-contain" />Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label={closeNavLabel} className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
+    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="flex items-center gap-2 font-bold text-neutral-950 dark:text-neutral-100"><Image src="/taskora-logo.svg" alt="" width={32} height={32} className="h-8 w-8 object-contain" />Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label={closeNavLabel} className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
     <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
       <div className="flex h-[72px] items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <img src="/taskora-logo.svg" alt="" className="h-9 w-9 object-contain" />
+          <Image src="/taskora-logo.svg" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
           <div>
             <p className="text-[17px] font-bold tracking-tight text-neutral-950 dark:text-neutral-100">Taskora</p>
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400">{t.workspace}</p>
