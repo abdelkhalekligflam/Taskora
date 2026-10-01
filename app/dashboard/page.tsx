@@ -15,6 +15,7 @@ type Task = {
   scheduled_at: string | null
   duration_minutes: number | null
   created_at: string
+  completed_at: string | null
 }
 
 type Goal = {
@@ -48,7 +49,7 @@ export default function DashboardPage() {
     async function load() {
       const { data } = await supabase
         .from("tasks")
-        .select("id,title,status,priority,scheduled_at,duration_minutes,created_at")
+        .select("id,title,status,priority,scheduled_at,duration_minutes,created_at,completed_at")
       setTasks((data ?? []) as Task[])
 
       const { data: goalData } = await supabase
@@ -88,9 +89,12 @@ export default function DashboardPage() {
     if (task.scheduled_at) return new Date(task.scheduled_at).toDateString() === todayKey
     return new Date(task.created_at).toDateString() === todayKey
   }), [tasks, todayKey])
-  const completed = useMemo(() => todayTasks.filter((task) => task.status === "completed").length, [todayTasks])
-  const completion = todayTasks.length ? Math.round((completed / todayTasks.length) * 100) : 0
-  const pending = todayTasks.length - completed
+  const completedToday = useMemo(() => tasks.filter((task) =>
+    task.status === "completed" && task.completed_at && new Date(task.completed_at).toDateString() === todayKey
+  ).length, [tasks, todayKey])
+  const pendingToday = useMemo(() => todayTasks.filter((task) => task.status !== "completed").length, [todayTasks])
+  const dailyTotal = pendingToday + completedToday
+  const completion = dailyTotal ? Math.round((completedToday / dailyTotal) * 100) : 0
   const priorities = useMemo(() => tasks
     .filter((task) => task.status !== "completed" && (!task.scheduled_at || new Date(task.scheduled_at).toDateString() === todayKey))
     .sort((a, b) => {
@@ -105,9 +109,9 @@ export default function DashboardPage() {
     .slice(0, 5), [tasks, searchQuery, todayKey])
 
   const stats = [
-    { label: t.tasksCompleted, value: String(completed), detail: `${todayTasks.length} ${tx.total}`, icon: CheckCircle2 },
+    { label: t.tasksCompleted, value: String(completedToday), detail: `${dailyTotal} ${tx.total}`, icon: CheckCircle2 },
     { label: t.focusTime, value: `${Math.round((focusMinutes / 60) * 10) / 10}h`, detail: `${focusMinutes} ${tx.minutes}`, icon: Clock3 },
-    { label: t.dailyProgress, value: `${completion}%`, detail: `${pending} ${tx.pending}`, icon: Target },
+    { label: t.dailyProgress, value: `${completion}%`, detail: `${pendingToday} ${tx.pending}`, icon: Target },
   ]
 
   const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
