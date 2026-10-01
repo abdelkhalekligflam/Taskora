@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Bell, Camera, Check, Globe2, Loader2, LogOut, Palette, Save, ShieldCheck, Sparkles, Trash2, UserRound } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
+import { usePreferences } from "@/components/providers/preferences-provider"
 
 type Profile = {
   full_name: string | null
@@ -39,6 +40,7 @@ function applyTheme(theme: Profile["theme"]) {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { theme: activeTheme } = usePreferences()
   const [profile, setProfile] = useState<Profile>(defaults)
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(true)
@@ -63,34 +65,20 @@ export default function SettingsPage() {
       if (error) setError(error.message)
       else if (data) {
         const loadedProfile = data as Profile
-        setProfile(loadedProfile)
-        applyTheme(loadedProfile.theme)
+        setProfile({ ...loadedProfile, theme: activeTheme })
       }
       else {
         const initial = { ...defaults, full_name: String(user.user_metadata?.full_name ?? "") }
         const { error: insertError } = await supabase.from("profiles").insert({ user_id: user.id, ...initial })
         if (insertError) setError(insertError.message)
         else {
-          setProfile(initial)
-          applyTheme(initial.theme)
+          setProfile({ ...initial, theme: activeTheme })
         }
       }
       setLoading(false)
     }
     void load()
-  }, [])
-
-  useEffect(() => {
-    applyTheme(profile.theme)
-  }, [profile.theme])
-
-  useEffect(() => {
-    if (profile.theme !== "system") return
-    const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const sync = () => applyTheme("system")
-    media.addEventListener("change", sync)
-    return () => media.removeEventListener("change", sync)
-  }, [profile.theme])
+  }, [activeTheme])
 
   async function uploadAvatar(file: File) {
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
@@ -151,7 +139,6 @@ export default function SettingsPage() {
       full_name: profile.full_name,
       language: profile.language,
       timezone: profile.timezone,
-      theme: profile.theme,
       notifications_enabled: profile.notifications_enabled,
     }).eq("user_id", user.id)
     if (error) setError(error.message)
