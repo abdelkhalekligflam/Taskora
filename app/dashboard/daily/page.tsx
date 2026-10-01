@@ -117,7 +117,7 @@ export default function DailyPage() {
       return
     }
 
-    const { error: insertError } = await supabase.from("tasks").insert({
+    const { data: insertedTask, error: insertError } = await supabase.from("tasks").insert({
       user_id: user.id,
       title,
       description: description || null,
@@ -128,18 +128,18 @@ export default function DailyPage() {
       duration_minutes: duration ? Number(duration) : null,
       recurrence: plan === "pro" ? recurrence : "none",
       reminder_minutes: plan === "pro" && reminder ? Number(reminder) : null,
-    })
+    }).select("id,title,description,category,priority,status,scheduled_at,duration_minutes,completed_at,created_at,recurrence,reminder_minutes").single()
 
-    if (insertError) {
-      setError(insertError.message)
+    if (insertError || !insertedTask) {
+      setError(insertError?.message ?? "Could not create task.")
       setSaving(false)
       return
     }
 
+    setTasks((current) => [insertedTask as Task, ...current])
     formElement.reset()
     setShowForm(false)
     setSaving(false)
-    await loadTasks()
   }
 
   async function updateTask(event: FormEvent<HTMLFormElement>) {
