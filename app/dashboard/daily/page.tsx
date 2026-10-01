@@ -69,6 +69,8 @@ export default function DailyPage() {
   }
 
   useEffect(() => {
+    // Initial remote data synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadTasks()
     void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data } = await supabase.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(); setPlan(data?.plan === "pro" ? "pro" : "free") } })()
   }, [])
@@ -613,7 +615,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Priority({ priority, label }: { priority: Task["priority"]; label: string }) {
+function Priority({ priority, label: _label }: { priority: Task["priority"]; label: string }) {
   const classes = {
     low: "bg-blue-50 text-blue-700",
     medium: "bg-amber-50 text-amber-700",
