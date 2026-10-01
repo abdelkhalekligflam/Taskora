@@ -17,10 +17,6 @@ type Task = {
 }
 
 const supabase = createClient()
-function monthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
-}
-
 export default function CalendarPage() {
   const { t, language } = usePreferences()
   const locale = language === "fr" ? "fr-FR" : language === "ar" ? "ar-MA" : "en-US"
