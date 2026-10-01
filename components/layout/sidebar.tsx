@@ -12,8 +12,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Moon,
-  Sun,
   X,
   TimerReset,
   FileDown,
@@ -42,7 +40,7 @@ const navigation = [
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { t, language, theme, setTheme } = usePreferences()
+  const { t, language } = usePreferences()
   const [plan, setPlan] = useState<"free" | "pro">("free")
   const [accountName, setAccountName] = useState("")
   const [accountEmail, setAccountEmail] = useState("")
@@ -86,9 +84,6 @@ export default function Sidebar() {
     }
   }, [mobileOpen])
 
-  const themeLabel = theme === "dark" ? (language === "fr" ? "Mode clair" : language === "ar" ? "الوضع الفاتح" : "Light mode") : (language === "fr" ? "Mode sombre" : language === "ar" ? "الوضع الداكن" : "Dark mode")
-  const toggleTheme = () => void setTheme(theme === "dark" ? "light" : "dark")
-
   const navItems = navigation.map((item) => {
     const Icon = item.icon
     const active = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
@@ -98,7 +93,7 @@ export default function Sidebar() {
   return (
     <>
     <button type="button" onClick={() => setMobileOpen(true)} aria-label={openNavLabel} aria-expanded={mobileOpen} className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-xl bg-[#4143D5] text-white shadow-lg lg:hidden rtl:left-auto rtl:right-4"><Menu className="h-5 w-5" /></button>
-    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="flex items-center gap-2 font-bold text-neutral-950 dark:text-neutral-100"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4143D5] text-white"><Sparkles className="h-4 w-4"/></span>Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label={closeNavLabel} className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><button type="button" onClick={toggleTheme} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-neutral-500 dark:text-neutral-400">{theme==="dark"?<Sun className="h-[18px] w-[18px]"/>:<Moon className="h-[18px] w-[18px]"/>}{themeLabel}</button><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
+    {mobileOpen && <div className="fixed inset-0 z-[60] bg-black/35 lg:hidden" onClick={() => setMobileOpen(false)}><aside className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white p-4 shadow-xl dark:bg-[#1C1F26]" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between px-2 py-2"><Link href="/dashboard" className="flex items-center gap-2 font-bold text-neutral-950 dark:text-neutral-100"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4143D5] text-white"><Sparkles className="h-4 w-4"/></span>Taskora</Link><button type="button" onClick={() => setMobileOpen(false)} aria-label={closeNavLabel} className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-[#252830]"><X className="h-5 w-5"/></button></div><nav className="mt-5 space-y-1">{navItems}</nav><div className="mt-5 border-t border-neutral-100 pt-3 dark:border-neutral-800"><Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><Settings className="h-[18px] w-[18px]"/>{t.settings}</Link><Link href="/dashboard/support" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm text-neutral-500"><CircleHelp className="h-[18px] w-[18px]"/>{t.help}</Link><button type="button" onClick={() => void signOut()} className="flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm text-red-600"><LogOut className="h-[18px] w-[18px]"/>{logoutLabel}</button></div></aside></div>}
     <aside className="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 z-40 hidden w-[248px] border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1F26] lg:flex lg:flex-col">
       <div className="flex h-[72px] items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -129,10 +124,6 @@ export default function Sidebar() {
       </div>
 
       <div className="mt-auto border-t border-neutral-100 p-3 dark:border-neutral-800">
-        <button type="button" onClick={toggleTheme} title={themeLabel} className="mb-1 flex h-10 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
-          {theme==="dark"?<Sun className="h-[18px] w-[18px]"/>:<Moon className="h-[18px] w-[18px]"/>}
-          {themeLabel}
-        </button>
         <Link href="/dashboard/settings" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-[#252830] dark:hover:text-neutral-100">
           <Settings className="h-[18px] w-[18px]" />
           {t.settings}
