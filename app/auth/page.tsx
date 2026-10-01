@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
-import { CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, Sparkles } from "lucide-react"
+import { CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function AuthPage() {
@@ -97,7 +97,7 @@ export default function AuthPage() {
           <div className="absolute inset-0 opacity-[.08] [background-image:linear-gradient(rgba(255,255,255,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.18)_1px,transparent_1px)] [background-size:48px_48px]" />
           <div className="relative z-10 flex w-full flex-col">
             <Link href="/" className="inline-flex w-fit items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[.07] shadow-2xl"><Sparkles className="h-4 w-4 text-[#a5a6ff]" /></span>
+              <img src="/taskora-logo.svg" alt="" className="h-10 w-10 object-contain" />
               <span className="text-lg font-semibold tracking-[-.03em]">Taskora</span>
             </Link>
 
@@ -123,7 +123,7 @@ export default function AuthPage() {
         </section>
 
         <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-          <div className="absolute left-5 top-5 lg:hidden"><Link href="/" className="flex items-center gap-2 font-semibold"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4143D5] text-white"><Sparkles className="h-3.5 w-3.5"/></span>Taskora</Link></div>
+          <div className="absolute left-5 top-5 lg:hidden"><Link href="/" className="flex items-center gap-2 font-semibold"><img src="/taskora-logo.svg" alt="" className="h-8 w-8 object-contain" />Taskora</Link></div>
           <div className="w-full max-w-[420px]">
             <div className="mb-8">
               <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white shadow-sm"><LockKeyhole className="h-[18px] w-[18px] text-[#4143D5]"/></div>
