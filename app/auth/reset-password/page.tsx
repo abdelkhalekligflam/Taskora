@@ -1,17 +1,17 @@
 "use client"
 
-import Link from "next/link"
 import { FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function ResetPasswordPage() {
+  const router = useRouter()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,9 +29,14 @@ export default function ResetPasswordPage() {
     setLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) setError(error.message)
-    else setSuccess(true)
-    setLoading(false)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    await supabase.auth.signOut()
+    router.replace("/auth?passwordUpdated=1")
   }
 
   return (
@@ -44,24 +49,17 @@ export default function ResetPasswordPage() {
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-neutral-950">Set a new password</h1>
         <p className="mt-2 text-sm leading-6 text-neutral-500">Choose a new password for your Taskora account.</p>
 
-        {success ? (
-          <div className="mt-7">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">Your password has been updated successfully.</div>
-            <Link href="/auth" className="mt-5 flex h-11 w-full items-center justify-center rounded-lg bg-[#4143D5] text-sm font-semibold text-white">Back to sign in</Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-            <PasswordField label="New password" value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
-            <PasswordField label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
+        <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+          <PasswordField label="New password" value={password} onChange={setPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
+          <PasswordField label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
 
-            {error && <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-700">{error}</div>}
+          {error && <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-700">{error}</div>}
 
-            <button type="submit" disabled={loading} className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#4143D5] text-sm font-semibold text-white transition hover:bg-[#3638bd] disabled:opacity-60">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading ? "Updating password..." : "Update password"}
-            </button>
-          </form>
-        )}
+          <button type="submit" disabled={loading} className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#4143D5] text-sm font-semibold text-white transition hover:bg-[#3638bd] disabled:opacity-60">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? "Updating password..." : "Update password"}
+          </button>
+        </form>
       </div>
     </main>
   )
